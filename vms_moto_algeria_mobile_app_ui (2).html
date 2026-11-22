@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VMS Moto Algérie — Mobile App UI Prototype (Figma Ready)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Three.js for Dynamic 3D Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            vms: {
+              red: '#E30613',
+              redDark: '#B8040E',
+              carbon: '#111318',
+              slate: '#1E222B',
+              silver: '#94A3B8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar hiding for sleek mobile feel */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Studio Background Fallback & Three.js Canvas Layer */
+    .figma-canvas-bg {
+      background-color: #080A0F;
+    }
+    #threeBgCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* Subtle slide-up animation for modals/drawers */
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0.5; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.75; }
+      70% { transform: scale(1.25); opacity: 0; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+    .fab-pulse::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 9999px;
+      background: #E30613;
+      z-index: -1;
+      animation: pulseRing 2.2s infinite;
+    }
+  </style>
+</head>
+<body class="figma-canvas-bg min-h-screen w-full flex flex-col items-center justify-center p-2 sm:p-6 text-slate-900 select-none overflow-x-hidden">
+
+  <!-- Dynamic Three.js 3D WebGL Background Stage -->
+  <canvas id="threeBgCanvas"></canvas>
+
+  <!-- Top Figma Studio Toolbar (For Design Inspection & 3D Background Controls) -->
+  <div class="relative z-10 hidden md:flex items-center justify-between w-full max-w-[440px] mb-3 px-3.5 py-2 rounded-2xl bg-[#161922]/85 border border-white/15 backdrop-blur-md text-xs text-slate-300 shadow-2xl">
+    <div class="flex items-center gap-2">
+      <!-- Mini Official VMS Oval Badge -->
+      <svg class="w-8 h-4 shrink-0" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="130" cy="60" rx="122" ry="52" fill="#FFFFFF" stroke="#E30613" stroke-width="11"/>
+        <path d="M40 34H62L66 74L88 34H136L136 69L157 34H185L173 86H153L160 54L141 86H122L121 54L113 86H93L102 49H96L73 86H47L40 34Z" fill="#E30613"/>
+        <path d="M232 35C222 33 206 32 195 39C187 44 185 54 191 61C197 68 208 72 206 77C204 81 191 79 182 76L179 87C192 91 213 92 223 84C231 78 232 67 224 59C217 52 208 49 210 45C212 41 223 43 230 45L232 35Z" fill="#E30613"/>
+      </svg>
+      <span class="font-display font-bold text-white tracking-wide">VMS MOTO DZ</span>
+      <span class="text-slate-500">|</span>
+      <span class="text-slate-400">393×852</span>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button onclick="toggleThreeAnimation()" id="threeToggleBtn" class="px-2.5 py-1 rounded-lg bg-vms-red/20 hover:bg-vms-red/30 border border-vms-red/40 text-rose-300 font-semibold transition flex items-center gap-1" title="Activer/Pause le fond 3D">
+        <i data-lucide="box" class="w-3.5 h-3.5"></i>
+        <span id="threeLabel">3D Actif</span>
+      </button>
+      <button onclick="toggleThemeMode()" id="themeToggleBtn" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition flex items-center gap-1">
+        <i data-lucide="sun-moon" class="w-3.5 h-3.5"></i>
+        <span id="themeLabel">Mode Clair</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE DEVICE FRAME (393px x 852px - Standard Modern Flagship Frame for Figma) -->
+  <div id="phoneFrame" class="relative z-10 w-full max-w-[393px] h-[844px] max-h-[94vh] bg-[#F8FAFC] rounded-[46px] shadow-[0_25px_70px_-15px_rgba(0,0,0,0.85),0_0_0_10px_#1E222B,0_0_0_12px_#333947] overflow-hidden flex flex-col transition-colors duration-300">
+
+    <!-- Dynamic Island / Notch & Mobile Status Bar -->
+    <div id="statusBar" class="relative z-30 pt-3 pb-2 px-6 flex items-center justify-between text-[11px] font-semibold bg-white/95 backdrop-blur-md text-slate-900 transition-colors">
+      <span>09:41</span>
+      <!-- Dynamic Island Pill -->
+      <div class="w-24 h-6 bg-black rounded-full flex items-center justify-end px-2 shadow-inner">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#1a233a] border border-slate-700"></div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <i data-lucide="signal" class="w-3.5 h-3.5"></i>
+        <i data-lucide="wifi" class="w-3.5 h-3.5"></i>
+        <div class="w-5 h-2.5 border border-current rounded-[3px] p-[1px] flex items-center">
+          <div class="w-full h-full bg-current rounded-[1px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP TOP HEADER WITH OFFICIAL VMS INDUSTRIE RED OVAL LOGO -->
+    <header id="appHeader" class="relative z-20 px-4 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-100 flex items-center justify-between transition-colors">
+      <!-- Official Red Oval VMS Industrie SVG Logo -->
+      <div onclick="switchTab('home')" class="flex items-center gap-2.5 cursor-pointer group">
+        <svg class="w-[74px] h-[36px] drop-shadow-xs transition-transform group-hover:scale-105 shrink-0" viewBox="0 0 260 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logo Officiel VMS Industrie">
+          <!-- White Backing Pill for Crisp Contrast in Both Light & Dark Themes -->
+          <ellipse cx="130" cy="60" rx="122" ry="52" fill="#FFFFFF" stroke="#E30613" stroke-width="10.5"/>
+          <!-- Connected Slanted V & M Letterforms -->
+          <path d="M40 34H62L66 74L88 34H136L136 69L157 34H185L173 86H153L160 54L141 86H122L121 54L113 86H93L102 49H96L73 86H47L40 34Z" fill="#E30613"/>
+          <!-- Bold Dynamic S Letterform -->
+          <path d="M232 35C222 33 206 32 195 39C187 44 185 54 191 61C197 68 208 72 206 77C204 81 191 79 182 76L179 87C192 91 213 92 223 84C231 78 232 67 224 59C217 52 208 49 210 45C212 41 223 43 230 45L232 35Z" fill="#E30613"/>
+        </svg>
+        <div>
+          <div class="flex items-center gap-1">
+            <span class="font-display font-extrabold text-base tracking-tight italic leading-none text-slate-900 dark-text">VMS</span>
+            <span class="font-display font-extrabold text-base tracking-tight italic leading-none text-vms-red">MOTO</span>
+          </div>
+          <span class="text-[9px] font-bold tracking-widest uppercase text-slate-400 block mt-0.5">Algérie • Officiel</span>
+        </div>
+      </div>
+
+      <!-- Header Right Actions -->
+      <div class="flex items-center gap-2">
+        <button onclick="switchTab('catalog'); document.getElementById('searchInput').focus()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 flex items-center justify-center text-slate-700 transition" aria-label="Rechercher">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+        <button onclick="switchTab('profile')" class="relative w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200/80 flex items-center justify-center text-slate-700 transition" aria-label="Favoris">
+          <i data-lucide="heart" class="w-4 h-4"></i>
+          <span id="favCountBadge" class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-vms-red text-white text-[10px] font-bold flex items-center justify-center shadow">2</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN SCROLLABLE APP CONTENT AREA -->
+    <main id="appContent" class="flex-1 overflow-y-auto no-scrollbar pb-24 relative">
+
+      <!-- ==================== TAB 1: HOME (ACCUEIL) ==================== -->
+      <section id="tab-home" class="space-y-5 p-4">
+
+        <!-- Hero Banner Card with Subtle Ambient Three.js Wireframe Overlay -->
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#111318] via-[#1C202B] to-[#3B060D] text-white p-5 shadow-xl">
+          <!-- Subtle Hero Ambient 3D Canvas -->
+          <canvas id="heroThreeCanvas" class="absolute inset-0 w-full h-full pointer-events-none opacity-45"></canvas>
+
+          <!-- Official VMS Oval Watermark -->
+          <svg class="absolute -right-6 -bottom-4 w-44 h-20 opacity-[0.07] pointer-events-none select-none" viewBox="0 0 260 120" fill="none">
+            <ellipse cx="130" cy="60" rx="122" ry="52" stroke="#FFFFFF" stroke-width="11"/>
+            <path d="M40 34H62L66 74L88 34H136L136 69L157 34H185L173 86H153L160 54L141 86H122L121 54L113 86H93L102 49H96L73 86H47L40 34Z" fill="#FFFFFF"/>
+            <path d="M232 35C222 33 206 32 195 39C187 44 185 54 191 61C197 68 208 72 206 77C204 81 191 79 182 76L179 87C192 91 213 92 223 84C231 78 232 67 224 59C217 52 208 49 210 45C212 41 223 43 230 45L232 35Z" fill="#FFFFFF"/>
+          </svg>
+
+          <div class="relative z-10 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-vms-red/20 border border-vms-red/40 text-rose-300 text-[10px] font-bold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-vms-red animate-ping"></span>
+                Collection 2026
+              </span>
+              <span class="text-[11px] font-semibold text-slate-300 bg-white/10 px-2.5 py-0.5 rounded-full">Garantie 12 Mois</span>
+            </div>
+
+            <div class="mt-3 max-w-[65%]">
+              <h1 class="font-display font-extrabold text-xl leading-tight">
+                VMS <span class="text-vms-red">DRIVER 150</span> & CUXI Édition
+              </h1>
+              <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                Performance urbaine, fiabilité algérienne et pièces d'origine disponibles dans 48 wilayas.
+              </p>
+            </div>
+
+            <div class="mt-4 flex items-center gap-2.5">
+              <button onclick="switchTab('catalog')" class="px-4 py-2.5 rounded-xl bg-vms-red hover:bg-vms-redDark text-white text-xs font-bold shadow-lg shadow-rose-600/30 transition flex items-center gap-1.5">
+                <span>Explorer la gamme</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="openBikeDetail('driver-150')" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-sm transition">
+                Fiche VMS Driver
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Floating Motorcycle Visual -->
+          <img
+            src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=500&q=80"
+            onerror="this.src='https://placehold.co/300x220/1E222B/FFFFFF?text=VMS+Driver+150'"
+            alt="VMS Driver 150"
+            class="absolute right-0 bottom-0 w-36 h-36 object-cover rounded-tl-3xl opacity-90 border-t border-l border-white/15 shadow-2xl"
+          />
+        </div>
+
+        <!-- Quick Categories Pills -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h2 class="font-display font-bold text-sm text-slate-900 dark-text">Catégories VMS</h2>
+            <button onclick="switchTab('catalog')" class="text-xs font-semibold text-vms-red">Tout voir</button>
+          </div>
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="filterAndGo('Scooter')" class="flex flex-col items-center p-2.5 rounded-2xl bg-white card-surface border border-slate-100 shadow-sm hover:border-vms-red/40 transition">
+              <div class="w-9 h-9 rounded-xl bg-rose-50 text-vms-red flex items-center justify-center mb-1.5">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-700 dark-text">Scooters</span>
+            </button>
+            <button onclick="filterAndGo('Sport')" class="flex flex-col items-center p-2.5 rounded-2xl bg-white card-surface border border-slate-100 shadow-sm hover:border-vms-red/40 transition">
+              <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center mb-1.5">
+                <i data-lucide="flame" class="w-4 h-4"></i>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-700 dark-text">Sport</span>
+            </button>
+            <button onclick="filterAndGo('Trail')" class="flex flex-col items-center p-2.5 rounded-2xl bg-white card-surface border border-slate-100 shadow-sm hover:border-vms-red/40 transition">
+              <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-1.5">
+                <i data-lucide="mountain" class="w-4 h-4"></i>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-700 dark-text">Trail/Cross</span>
+            </button>
+            <button onclick="switchTab('showrooms')" class="flex flex-col items-center p-2.5 rounded-2xl bg-white card-surface border border-slate-100 shadow-sm hover:border-vms-red/40 transition">
+              <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1.5">
+                <i data-lucide="wrench" class="w-4 h-4"></i>
+              </div>
+              <span class="text-[11px] font-semibold text-slate-700 dark-text">SAV & Pièces</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Featured VMS Models Horizontal Carousel -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <div>
+              <h2 class="font-display font-bold text-sm text-slate-900 dark-text">Modèles Populaires en Algérie</h2>
+              <p class="text-[11px] text-slate-400">Prix TTC • Carte jaune incluse</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-md bg-rose-50 text-vms-red text-[10px] font-bold">TOP VENTES</span>
+          </div>
+
+          <div id="featuredCarousel" class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Dealer / Showroom Highlight Card (Béjaïa / Alger / Oran) -->
+        <div class="rounded-2xl bg-white card-surface border border-slate-100 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-vms-carbon text-white flex items-center justify-center">
+                <i data-lucide="map-pin" class="w-4 h-4 text-vms-red"></i>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-xs text-slate-900 dark-text">Usine & Showrooms VMS Algérie</h3>
+                <p class="text-[10px] text-slate-400">Toudja (Béjaïa), Alger, Oran, Sétif</p>
+              </div>
+            </div>
+            <button onclick="switchTab('showrooms')" class="text-xs font-bold text-vms-red hover:underline">Voir réseau</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
+            <div>
+              <span class="block font-display font-extrabold text-sm text-slate-900 dark-text">48</span>
+              <span class="text-[10px] text-slate-400">Wilayas</span>
+            </div>
+            <div>
+              <span class="block font-display font-extrabold text-sm text-vms-red">120+</span>
+              <span class="text-[10px] text-slate-400">Points de vente</span>
+            </div>
+            <div>
+              <span class="block font-display font-extrabold text-sm text-slate-900 dark-text">100%</span>
+              <span class="text-[10px] text-slate-400">Pièces Dispo</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== TAB 2: CATALOGUE MOTOS VMS ==================== -->
+      <section id="tab-catalog" class="hidden space-y-4 p-4">
+        <div>
+          <h1 class="font-display font-extrabold text-lg text-slate-900 dark-text">Catalogue VMS Moto</h1>
+          <p class="text-xs text-slate-400">Gamme officielle assemblée en Algérie</p>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input
+            id="searchInput"
+            type="text"
+            oninput="renderCatalog()"
+            placeholder="Rechercher Cuxi, Driver, Ghibli, 250cc..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white card-surface border border-slate-200 text-xs focus:outline-none focus:border-vms-red transition"
+          />
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="categoryChips">
+          <button onclick="setCatalogFilter('All')" data-cat="All" class="cat-chip active px-3.5 py-1.5 rounded-full text-xs font-bold bg-vms-carbon text-white whitespace-nowrap transition">Tous (8)</button>
+          <button onclick="setCatalogFilter('Scooter')" data-cat="Scooter" class="cat-chip px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 whitespace-nowrap transition">Scooters</button>
+          <button onclick="setCatalogFilter('Sport')" data-cat="Sport" class="cat-chip px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 whitespace-nowrap transition">Sport / Roadster</button>
+          <button onclick="setCatalogFilter('Trail')" data-cat="Trail" class="cat-chip px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 whitespace-nowrap transition">Trail / Supermoto</button>
+        </div>
+
+        <!-- Displacement Filter Pills -->
+        <div class="flex items-center gap-1.5 text-[11px]">
+          <span class="text-slate-400 font-medium mr-1">Cylindrée:</span>
+          <button onclick="setCcFilter('All')" data-cc="All" class="cc-chip px-2.5 py-1 rounded-lg bg-rose-50 text-vms-red font-bold">Toutes</button>
+          <button onclick="setCcFilter('125cc')" data-cc="125cc" class="cc-chip px-2.5 py-1 rounded-lg bg-white text-slate-600 border border-slate-200">125cc</button>
+          <button onclick="setCcFilter('150cc')" data-cc="150cc" class="cc-chip px-2.5 py-1 rounded-lg bg-white text-slate-600 border border-slate-200">150cc</button>
+          <button onclick="setCcFilter('250cc')" data-cc="250cc" class="cc-chip px-2.5 py-1 rounded-lg bg-white text-slate-600 border border-slate-200">250cc</button>
+        </div>
+
+        <!-- Catalog Grid -->
+        <div id="catalogGrid" class="grid grid-cols-2 gap-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: SHOWROOMS & RÉSEAU ==================== -->
+      <section id="tab-showrooms" class="hidden space-y-4 p-4">
+        <div>
+          <h1 class="font-display font-extrabold text-lg text-slate-900 dark-text">Réseau VMS Algérie</h1>
+          <p class="text-xs text-slate-400">Showrooms officiels & Ateliers SAV agréés</p>
+        </div>
+
+        <!-- City Filter -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar">
+          <button onclick="filterShowrooms('All')" class="sr-city-btn px-3 py-1.5 rounded-full text-xs font-bold bg-vms-red text-white">Toutes les villes</button>
+          <button onclick="filterShowrooms('Béjaïa')" class="sr-city-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Béjaïa</button>
+          <button onclick="filterShowrooms('Alger')" class="sr-city-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Alger</button>
+          <button onclick="filterShowrooms('Oran')" class="sr-city-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Oran</button>
+          <button onclick="filterShowrooms('Sétif')" class="sr-city-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200">Sétif</button>
+        </div>
+
+        <!-- Showrooms List -->
+        <div id="showroomsList" class="space-y-3">
+          <!-- Populated via JS -->
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: PROFIL / FAVORIS / FINANCEMENT ==================== -->
+      <section id="tab-profile" class="hidden space-y-4 p-4">
+        <!-- User Profile Header -->
+        <div class="rounded-3xl bg-vms-carbon text-white p-4 flex items-center justify-between shadow-md">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-vms-red to-rose-400 flex items-center justify-center font-display font-extrabold text-lg">
+              DZ
+            </div>
+            <div>
+              <h2 class="font-display font-bold text-sm">Client VMS Moto</h2>
+              <p class="text-[11px] text-slate-400">Amizour, Béjaïa • Membre Club VMS</p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-semibold">Vérifié</span>
+        </div>
+
+        <!-- Saved Favorites -->
+        <div>
+          <h3 class="font-display font-bold text-sm text-slate-900 dark-text mb-2">Mes Motos Favorites</h3>
+          <div id="favoritesList" class="space-y-2.5">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- Quick Financing / Installment Simulator (Facilités de paiement) -->
+        <div class="rounded-3xl bg-white card-surface border border-slate-200 p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="calculator" class="w-4 h-4 text-vms-red"></i>
+              <h3 class="font-display font-bold text-sm text-slate-900 dark-text">Simulateur Facilités VMS</h3>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">0% Intérêt</span>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-slate-500 block mb-1">Modèle sélectionné</label>
+            <select id="simModelSelect" onchange="updateSimulator()" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="text-[11px] text-slate-500 block mb-1">Apport initial (40%)</label>
+              <div id="simDownPayment" class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900">128 000 DA</div>
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-500 block mb-1">Durée</label>
+              <select id="simMonths" onchange="updateSimulator()" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800">
+                <option value="6">6 Mois</option>
+                <option value="12" selected>12 Mois</option>
+                <option value="18">18 Mois</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-between">
+            <span class="text-xs font-medium text-rose-900">Mensualité estimée :</span>
+            <span id="simMonthlyResult" class="font-display font-extrabold text-base text-vms-red">16 000 DA / mois</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ==================== FLOATING AI CHATBOT BUTTON (IA VMS) ==================== -->
+    <button
+      onclick="toggleChatDrawer(true)"
+      aria-label="Ouvrir l'assistant IA VMS"
+      class="fab-pulse absolute bottom-24 right-4 z-30 px-4 h-12 rounded-full bg-gradient-to-tr from-vms-redDark to-vms-red text-white shadow-[0_10px_25px_rgba(227,6,19,0.55)] flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform cursor-pointer border border-white/20"
+    >
+      <i data-lucide="bot" class="w-5 h-5"></i>
+      <span class="font-display font-extrabold text-xs tracking-wide">IA VMS</span>
+    </button>
+
+    <!-- ==================== BOTTOM NAVIGATION BAR ==================== -->
+    <nav id="bottomNav" class="relative z-20 bg-white/95 backdrop-blur-md border-t border-slate-100 px-4 pt-2 pb-5 flex items-center justify-around transition-colors">
+      <button onclick="switchTab('home')" data-tab="home" class="nav-btn active flex flex-col items-center gap-1 text-vms-red">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span class="text-[10px] font-bold">Accueil</span>
+      </button>
+      <button onclick="switchTab('catalog')" data-tab="catalog" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 transition">
+        <i data-lucide="bike" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Motos VMS</span>
+      </button>
+      <button onclick="switchTab('showrooms')" data-tab="showrooms" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 transition">
+        <i data-lucide="map-pin" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Showrooms</span>
+      </button>
+      <button onclick="switchTab('profile')" data-tab="profile" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-700 transition">
+        <i data-lucide="user" class="w-5 h-5"></i>
+        <span class="text-[10px] font-semibold">Favoris & Crédit</span>
+      </button>
+    </nav>
+
+    <!-- Home Indicator Bar -->
+    <div class="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-32 h-1 bg-slate-900/20 rounded-full z-30 pointer-events-none"></div>
+
+    <!-- ==================== MOTORCYCLE DETAIL DRAWER MODAL ==================== -->
+    <div id="bikeDetailModal" class="hidden absolute inset-0 z-40 bg-black/60 backdrop-blur-xs flex flex-col justify-end">
+      <div class="bg-white rounded-t-[32px] max-h-[88%] flex flex-col overflow-hidden animate-slide-up shadow-2xl">
+        <!-- Modal Header Image & Close -->
+        <div class="relative h-52 bg-slate-900">
+          <img id="detailImg" src="" alt="VMS Moto" class="w-full h-full object-cover opacity-90" />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30"></div>
+          <button onclick="closeBikeDetail()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/70">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          <button id="detailFavBtn" onclick="toggleFavoriteFromModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/50 text-white backdrop-blur-md flex items-center justify-center">
+            <i data-lucide="heart" class="w-4 h-4"></i>
+          </button>
+          <div class="absolute bottom-3 left-5 right-5 flex items-end justify-between text-white">
+            <div>
+              <span id="detailCategory" class="px-2 py-0.5 rounded bg-vms-red text-[10px] font-bold uppercase tracking-wider">Scooter</span>
+              <h2 id="detailName" class="font-display font-extrabold text-xl mt-1">VMS Driver 150</h2>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-300 block">Prix TTC</span>
+              <span id="detailPrice" class="font-display font-extrabold text-lg text-rose-400">320 000 DA</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Body Specs -->
+        <div class="p-5 overflow-y-auto no-scrollbar space-y-4">
+          <!-- Color Swatch Selector -->
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">Coloris disponibles :</span>
+            <div id="detailColors" class="flex items-center gap-2"></div>
+          </div>
+
+          <!-- Technical Specs Grid -->
+          <div class="grid grid-cols-2 gap-2.5" id="detailSpecsGrid">
+            <!-- Populated via JS -->
+          </div>
+
+          <p id="detailDesc" class="text-xs text-slate-500 leading-relaxed"></p>
+
+          <!-- Quote Request / Order Form Toast Feedback -->
+          <div id="quoteConfirmation" class="hidden p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center gap-2">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+            <span>Demande de devis envoyée ! Un conseiller VMS Algérie vous contactera sous 2h.</span>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="flex gap-2.5 pt-1">
+            <button onclick="requestQuote()" class="flex-1 py-3 rounded-2xl bg-vms-red hover:bg-vms-redDark text-white font-display font-bold text-xs shadow-lg shadow-rose-600/25 transition">
+              Demander un devis / Réserver
+            </button>
+            <button onclick="askBotAboutCurrentBike()" class="px-3.5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition">
+              <i data-lucide="message-square" class="w-4 h-4 text-vms-red"></i>
+              <span>IA VMS</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== FLOATING AI CHATBOT SLIDE-UP DRAWER (IA VMS) ==================== -->
+    <div id="chatDrawer" class="hidden absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex flex-col justify-end">
+      <div class="bg-white rounded-t-[32px] h-[78%] flex flex-col overflow-hidden animate-slide-up shadow-2xl">
+        <!-- Chat Header -->
+        <div class="px-5 py-3.5 bg-vms-carbon text-white flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <!-- Official Mini VMS Logo Avatar -->
+            <div class="w-11 h-7 rounded-full bg-white flex items-center justify-center shadow px-1">
+              <svg class="w-full h-full" viewBox="0 0 260 120" fill="none">
+                <ellipse cx="130" cy="60" rx="122" ry="52" stroke="#E30613" stroke-width="12"/>
+                <path d="M40 34H62L66 74L88 34H136L136 69L157 34H185L173 86H153L160 54L141 86H122L121 54L113 86H93L102 49H96L73 86H47L40 34Z" fill="#E30613"/>
+                <path d="M232 35C222 33 206 32 195 39C187 44 185 54 191 61C197 68 208 72 206 77C204 81 191 79 182 76L179 87C192 91 213 92 223 84C231 78 232 67 224 59C217 52 208 49 210 45C212 41 223 43 230 45L232 35Z" fill="#E30613"/>
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-display font-bold text-sm">IA VMS</h3>
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              </div>
+              <p class="text-[10px] text-slate-400">Assistant officiel VMS Moto Algérie</p>
+            </div>
+          </div>
+          <button onclick="toggleChatDrawer(false)" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Messages Container -->
+        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto no-scrollbar space-y-3 bg-slate-50">
+          <!-- Initial Welcome Message -->
+          <div class="flex items-start gap-2 max-w-[85%]">
+            <div class="w-8 h-5 rounded-full bg-white border border-vms-red flex items-center justify-center shrink-0 mt-1 px-0.5 shadow-2xs">
+              <span class="font-display font-black italic text-[8px] text-vms-red tracking-tighter">VMS</span>
+            </div>
+            <div class="p-3 rounded-2xl rounded-tl-none bg-white border border-slate-200 text-xs text-slate-700 shadow-xs leading-relaxed">
+              Salam ! 👋 Je suis <strong>IA VMS</strong>, votre conseiller officiel <strong>VMS Moto Algérie</strong>. Je peux vous aider à choisir votre moto VMS, vérifier les prix en DA ou localiser un showroom (Béjaïa, Alger, Oran...). Que recherchez-vous ?
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Reply Chips -->
+        <div class="px-3 py-2 bg-white border-t border-slate-100 flex gap-1.5 overflow-x-auto no-scrollbar">
+          <button onclick="sendQuickChat('Prix VMS Driver 150 ?')" class="px-3 py-1.5 rounded-full bg-rose-50 text-vms-red text-[11px] font-semibold whitespace-nowrap hover:bg-rose-100 transition">Prix VMS Driver 150 ?</button>
+          <button onclick="sendQuickChat('Meilleur scooter ville ?')" class="px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold whitespace-nowrap hover:bg-slate-200 transition">Meilleur scooter ville ?</button>
+          <button onclick="sendQuickChat('Showrooms Béjaïa & Alger')" class="px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold whitespace-nowrap hover:bg-slate-200 transition">Showrooms Béjaïa & Alger</button>
+          <button onclick="sendQuickChat('Facilités de paiement ?')" class="px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold whitespace-nowrap hover:bg-slate-200 transition">Facilités de paiement ?</button>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <form onsubmit="handleChatSubmit(event)" class="p-3 bg-white border-t border-slate-100 flex items-center gap-2 pb-6">
+          <input
+            id="chatInput"
+            type="text"
+            placeholder="Posez votre question à IA VMS..."
+            class="flex-1 px-4 py-2.5 rounded-full bg-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-vms-red/40"
+          />
+          <button type="submit" class="w-10 h-10 rounded-full bg-vms-red hover:bg-vms-redDark text-white flex items-center justify-center shadow transition shrink-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+  <script>
+    // 1. Authentic VMS Moto Algeria Dataset
+    const vmsMotorcycles = [
+      {
+        id: 'driver-150',
+        name: 'VMS Driver 150',
+        category: 'Scooter',
+        cc: '150cc',
+        price: 320000,
+        priceFormatted: '320 000 DA',
+        featured: true,
+        badge: 'Best-Seller',
+        image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80',
+        colors: ['#E11D48', '#111318', '#94A3B8'],
+        specs: {
+          Moteur: 'Monocylindre 4T',
+          Cylindrée: '149.6 cm³',
+          Refroidissement: 'Air forcé',
+          Freinage: 'Disque AV / Tambour AR',
+          Réservoir: '6.5 Litres',
+          Garantie: '12 Mois / 6000 km'
+        },
+        description: 'Le scooter polyvalent par excellence en Algérie. Confortable en duo, économique et nerveux en circulation urbaine.'
+      },
+      {
+        id: 'cuxi-125',
+        name: 'VMS Cuxi 125',
+        category: 'Scooter',
+        cc: '125cc',
+        price: 265000,
+        priceFormatted: '265 000 DA',
+        featured: true,
+        badge: 'Urbain Agile',
+        image: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=600&q=80',
+        colors: ['#FFFFFF', '#E11D48', '#1E293B'],
+        specs: {
+          Moteur: 'Monocylindre 4T',
+          Cylindrée: '124.6 cm³',
+          Refroidissement: 'Air',
+          Freinage: 'Disque AV CBS',
+          Réservoir: '5.5 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Compact, léger et ultra-maniable. Idéal pour les trajets quotidiens en ville avec une consommation réduite de 2.4L/100km.'
+      },
+      {
+        id: 'ghibli-150',
+        name: 'VMS Ghibli 150 GT',
+        category: 'Scooter',
+        cc: '150cc',
+        price: 355000,
+        priceFormatted: '355 000 DA',
+        featured: true,
+        badge: 'Nouveau 2026',
+        image: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=600&q=80',
+        colors: ['#111318', '#DC2626', '#334155'],
+        specs: {
+          Moteur: 'Monocylindre 4T EFI',
+          Cylindrée: '150 cm³',
+          Refroidissement: 'Liquide',
+          Freinage: 'Double Disque',
+          Réservoir: '8.0 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Design GT sportif avec éclairage Full LED, tableau de bord digital et grand coffre sous selle.'
+      },
+      {
+        id: 'vms-250-supermoto',
+        name: 'VMS 250 Supermoto',
+        category: 'Trail',
+        cc: '250cc',
+        price: 485000,
+        priceFormatted: '485 000 DA',
+        featured: true,
+        badge: 'Puissance',
+        image: 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=600&q=80',
+        colors: ['#E11D48', '#111318'],
+        specs: {
+          Moteur: '4 Temps 6 Vitesses',
+          Cylindrée: '249 cm³',
+          Refroidissement: 'Liquide',
+          Freinage: 'Disques Pétales AV/AR',
+          Réservoir: '11.5 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Taillez la route et les pistes de Kabylie avec la VMS 250 Supermoto. Fourche inversée et couple généreux.'
+      },
+      {
+        id: 'vmax-150',
+        name: 'VMS V-Max 150',
+        category: 'Scooter',
+        cc: '150cc',
+        price: 340000,
+        priceFormatted: '340 000 DA',
+        featured: false,
+        badge: 'Maxi-Scooter',
+        image: 'https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?auto=format&fit=crop&w=600&q=80',
+        colors: ['#1E293B', '#94A3B8'],
+        specs: {
+          Moteur: 'Monocylindre 4T',
+          Cylindrée: '150 cm³',
+          Refroidissement: 'Air / Huile',
+          Freinage: 'Disque AV/AR',
+          Réservoir: '9.0 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Stabilité remarquable sur voie rapide grâce à son empattement allongé et sa bulle haute protection.'
+      },
+      {
+        id: 'vms-roadster-250',
+        name: 'VMS R-250 Naked',
+        category: 'Sport',
+        cc: '250cc',
+        price: 460000,
+        priceFormatted: '460 000 DA',
+        featured: false,
+        badge: 'Sport',
+        image: 'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?auto=format&fit=crop&w=600&q=80',
+        colors: ['#E11D48', '#0F172A'],
+        specs: {
+          Moteur: '4T Injection 6V',
+          Cylindrée: '249 cm³',
+          Refroidissement: 'Liquide',
+          Freinage: 'Double Disque',
+          Réservoir: '14 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Look agressif Streetfighter, châssis treillis tubulaire et sonorité sportive.'
+      },
+      {
+        id: 'vms-city-125',
+        name: 'VMS City 125',
+        category: 'Scooter',
+        cc: '125cc',
+        price: 235000,
+        priceFormatted: '235 000 DA',
+        featured: false,
+        badge: 'Économique',
+        image: 'https://images.unsplash.com/photo-1615172282427-9a57ef2d142e?auto=format&fit=crop&w=600&q=80',
+        colors: ['#E11D48', '#FFFFFF', '#111318'],
+        specs: {
+          Moteur: 'Monocylindre 4T',
+          Cylindrée: '125 cm³',
+          Refroidissement: 'Air',
+          Freinage: 'Disque AV',
+          Réservoir: '5.2 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Le meilleur rapport qualité/prix de la gamme VMS pour vos déplacements quotidiens.'
+      },
+      {
+        id: 'vms-cross-250',
+        name: 'VMS Enduro X250',
+        category: 'Trail',
+        cc: '250cc',
+        price: 495000,
+        priceFormatted: '495 000 DA',
+        featured: false,
+        badge: 'Off-Road',
+        image: 'https://images.unsplash.com/photo-1547549082-6bc09f2049ae?auto=format&fit=crop&w=600&q=80',
+        colors: ['#E11D48', '#111318'],
+        specs: {
+          Moteur: '4T Refroidi par eau',
+          Cylindrée: '250 cm³',
+          Refroidissement: 'Liquide',
+          Freinage: 'Hydraulique AV/AR',
+          Réservoir: '10 Litres',
+          Garantie: '12 Mois'
+        },
+        description: 'Conçue pour le franchissement et les terrains accidentés avec garde au sol surélevée.'
+      }
+    ];
+
+    const showroomsData = [
+      {
+        name: 'Siège & Usine VMS Industrie',
+        city: 'Béjaïa',
+        address: 'Zone Industrielle Toudja / El Kseur, Béjaïa',
+        phone: '034 11 22 33',
+        services: ['Showroom', 'Usine', 'Pièces Gros', 'SAV']
+      },
+      {
+        name: 'VMS Moto Store Béjaïa Centre',
+        city: 'Béjaïa',
+        address: 'Boulevard Krim Belkacem, Béjaïa Ville',
+        phone: '0550 45 67 89',
+        services: ['Vente Neuf', 'SAV Express', 'Accessoires']
+      },
+      {
+        name: 'VMS Flagship Alger Cheraga',
+        city: 'Alger',
+        address: 'Route Nationale N°36, Chéraga, Alger',
+        phone: '023 36 88 10',
+        services: ['Showroom', 'Facilités', 'Atelier Agréé']
+      },
+      {
+        name: 'VMS Distributeur Officiel Oran',
+        city: 'Oran',
+        address: 'Boulevard Millénium, Bir El Djir, Oran',
+        phone: '041 72 90 15',
+        services: ['Vente Neuf', 'Pièces Origine', 'SAV']
+      },
+      {
+        name: 'VMS Espace Moto Sétif',
+        city: 'Sétif',
+        address: 'Cité El Hidhab, Route de Batna, Sétif',
+        phone: '036 61 44 20',
+        services: ['Showroom', 'SAV']
+      }
+    ];
+
+    // App State
+    let favorites = ['driver-150', 'ghibli-150'];
+    let currentCategory = 'All';
+    let currentCc = 'All';
+    let activeBikeId = null;
+    let isDarkMode = false;
+
+    // Initialize App on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderFeaturedCarousel();
+      renderCatalog();
+      renderShowrooms('All');
+      renderFavorites();
+      populateSimulatorSelect();
+      updateSimulator();
+      updateFavBadge();
+      lucide.createIcons();
+    });
+
+    // Tab Navigation Switching
+    function switchTab(tabName) {
+      const tabs = ['home', 'catalog', 'showrooms', 'profile'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+      });
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+
+      // Update Bottom Nav Active State
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.remove('text-slate-400');
+          btn.classList.add('text-vms-red', 'font-bold');
+        } else {
+          btn.classList.add('text-slate-400');
+          btn.classList.remove('text-vms-red', 'font-bold');
+        }
+      });
+
+      document.getElementById('appContent').scrollTop = 0;
+      lucide.createIcons();
+    }
+
+    // Filter from Home Category Shortcut
+    function filterAndGo(category) {
+      switchTab('catalog');
+      setCatalogFilter(category);
+    }
+
+    // Render Featured Horizontal Carousel on Home
+    function renderFeaturedCarousel() {
+      const container = document.getElementById('featuredCarousel');
+      const featured = vmsMotorcycles.filter(m => m.featured);
+
+      container.innerHTML = featured.map(bike => {
+        const isFav = favorites.includes(bike.id);
+        return `
+          <div class="min-w-[215px] rounded-2xl bg-white card-surface border border-slate-100 overflow-hidden shadow-sm flex flex-col justify-between group">
+            <div class="relative h-32 bg-slate-900 overflow-hidden cursor-pointer" onclick="openBikeDetail('${bike.id}')">
+              <img
+                src="${bike.image}"
+                onerror="this.src='https://placehold.co/300x200/1E222B/FFFFFF?text=${encodeURIComponent(bike.name)}'"
+                alt="${bike.name}"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-vms-carbon/85 backdrop-blur-xs text-white text-[9px] font-bold">
+                ${bike.badge}
+              </span>
+              <button
+                onclick="event.stopPropagation(); toggleFavorite('${bike.id}')"
+                class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow ${isFav ? 'text-vms-red' : 'text-slate-400'}"
+              >
+                <i data-lucide="heart" class="w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}"></i>
+              </button>
+            </div>
+            <div class="p-3">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold">
+                <span>${bike.category}</span>
+                <span>${bike.cc}</span>
+              </div>
+              <h3 onclick="openBikeDetail('${bike.id}')" class="font-display font-bold text-xs text-slate-900 dark-text mt-0.5 cursor-pointer hover:text-vms-red truncate">${bike.name}</h3>
+              <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="font-display font-extrabold text-xs text-vms-red">${bike.priceFormatted}</span>
+                <button onclick="openBikeDetail('${bike.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[10px] font-bold hover:bg-vms-red transition">
+                  Détails
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Catalog Filtering Logic
+    function setCatalogFilter(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-chip').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'cat-chip px-3.5 py-1.5 rounded-full text-xs font-bold bg-vms-carbon text-white whitespace-nowrap transition';
+        } else {
+          btn.className = 'cat-chip px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 whitespace-nowrap transition';
+        }
+      });
+      renderCatalog();
+    }
+
+    function setCcFilter(cc) {
+      currentCc = cc;
+      document.querySelectorAll('.cc-chip').forEach(btn => {
+        if (btn.dataset.cc === cc) {
+          btn.className = 'cc-chip px-2.5 py-1 rounded-lg bg-rose-50 text-vms-red font-bold';
+        } else {
+          btn.className = 'cc-chip px-2.5 py-1 rounded-lg bg-white text-slate-600 border border-slate-200';
+        }
+      });
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const query = (document.getElementById('searchInput')?.value || '').toLowerCase();
+      const grid = document.getElementById('catalogGrid');
+
+      const filtered = vmsMotorcycles.filter(bike => {
+        const matchCat = currentCategory === 'All' || bike.category === currentCategory;
+        const matchCc = currentCc === 'All' || bike.cc === currentCc;
+        const matchQuery = bike.name.toLowerCase().includes(query) || bike.cc.toLowerCase().includes(query);
+        return matchCat && matchCc && matchQuery;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-2 text-center py-8 text-xs text-slate-400">Aucune moto VMS trouvée pour ce filtre.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(bike => {
+        const isFav = favorites.includes(bike.id);
+        return `
+          <div class="rounded-2xl bg-white card-surface border border-slate-100 overflow-hidden shadow-xs flex flex-col justify-between">
+            <div class="relative h-28 bg-slate-900 cursor-pointer" onclick="openBikeDetail('${bike.id}')">
+              <img
+                src="${bike.image}"
+                onerror="this.src='https://placehold.co/240x180/1E222B/FFFFFF?text=${encodeURIComponent(bike.name)}'"
+                alt="${bike.name}"
+                class="w-full h-full object-cover"
+              />
+              <span class="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-white text-[9px] font-bold">${bike.cc}</span>
+              <button
+                onclick="event.stopPropagation(); toggleFavorite('${bike.id}')"
+                class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center ${isFav ? 'text-vms-red' : 'text-slate-400'}"
+              >
+                <i data-lucide="heart" class="w-3 h-3 ${isFav ? 'fill-current' : ''}"></i>
+              </button>
+            </div>
+            <div class="p-2.5">
+              <span class="text-[9px] font-semibold uppercase text-slate-400">${bike.category}</span>
+              <h3 onclick="openBikeDetail('${bike.id}')" class="font-display font-bold text-xs text-slate-900 dark-text truncate cursor-pointer">${bike.name}</h3>
+              <p class="font-display font-extrabold text-xs text-vms-red mt-1">${bike.priceFormatted}</p>
+              <button onclick="openBikeDetail('${bike.id}')" class="mt-2 w-full py-1.5 rounded-xl bg-slate-100 hover:bg-vms-red hover:text-white text-slate-800 text-[10px] font-bold transition">
+                Voir fiche
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Favorites Management
+    function toggleFavorite(id) {
+      if (favorites.includes(id)) {
+        favorites = favorites.filter(item => item !== id);
+      } else {
+        favorites.push(id);
+      }
+      updateFavBadge();
+      renderFeaturedCarousel();
+      renderCatalog();
+      renderFavorites();
+      if (activeBikeId === id) {
+        updateModalFavIcon();
+      }
+    }
+
+    function toggleFavoriteFromModal() {
+      if (activeBikeId) {
+        toggleFavorite(activeBikeId);
+      }
+    }
+
+    function updateFavBadge() {
+      const badge = document.getElementById('favCountBadge');
+      badge.textContent = favorites.length;
+      badge.classList.toggle('hidden', favorites.length === 0);
+    }
+
+    function renderFavorites() {
+      const list = document.getElementById('favoritesList');
+      const favBikes = vmsMotorcycles.filter(b => favorites.includes(b.id));
+
+      if (favBikes.length === 0) {
+        list.innerHTML = `<div class="p-4 rounded-2xl bg-white border border-slate-100 text-center text-xs text-slate-400">Aucune moto en favori. Cliquez sur le cœur d'un modèle VMS !</div>`;
+        return;
+      }
+
+      list.innerHTML = favBikes.map(bike => `
+        <div class="p-2.5 rounded-2xl bg-white card-surface border border-slate-100 flex items-center justify-between shadow-xs">
+          <div class="flex items-center gap-3 cursor-pointer" onclick="openBikeDetail('${bike.id}')">
+            <img src="${bike.image}" alt="${bike.name}" class="w-14 h-12 rounded-xl object-cover bg-slate-900" />
+            <div>
+              <h4 class="font-display font-bold text-xs text-slate-900 dark-text">${bike.name}</h4>
+              <span class="text-[11px] font-extrabold text-vms-red">${bike.priceFormatted}</span>
+            </div>
+          </div>
+          <button onclick="toggleFavorite('${bike.id}')" class="p-2 text-vms-red hover:bg-rose-50 rounded-xl">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // Bike Detail Modal
+    function openBikeDetail(id) {
+      const bike = vmsMotorcycles.find(b => b.id === id);
+      if (!bike) return;
+      activeBikeId = id;
+
+      document.getElementById('detailImg').src = bike.image;
+      document.getElementById('detailCategory').textContent = `${bike.category} • ${bike.cc}`;
+      document.getElementById('detailName').textContent = bike.name;
+      document.getElementById('detailPrice').textContent = bike.priceFormatted;
+      document.getElementById('detailDesc').textContent = bike.description;
+      document.getElementById('quoteConfirmation').classList.add('hidden');
+
+      // Color Swatches
+      document.getElementById('detailColors').innerHTML = bike.colors.map((hex, i) => `
+        <button onclick="selectSwatch(this)" class="w-5 h-5 rounded-full border-2 ${i === 0 ? 'border-vms-red scale-110' : 'border-slate-300'} shadow-xs transition" style="background-color: ${hex}"></button>
+      `).join('');
+
+      // Specs Grid
+      document.getElementById('detailSpecsGrid').innerHTML = Object.entries(bike.specs).map(([key, val]) => `
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+          <span class="text-[10px] text-slate-400 block">${key}</span>
+          <span class="text-xs font-bold text-slate-800">${val}</span>
+        </div>
+      `).join('');
+
+      updateModalFavIcon();
+      document.getElementById('bikeDetailModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function updateModalFavIcon() {
+      const btn = document.getElementById('detailFavBtn');
+      const isFav = favorites.includes(activeBikeId);
+      btn.innerHTML = `<i data-lucide="heart" class="w-4 h-4 ${isFav ? 'text-vms-red fill-current' : 'text-white'}"></i>`;
+      lucide.createIcons();
+    }
+
+    function selectSwatch(el) {
+      el.parentElement.querySelectorAll('button').forEach(b => {
+        b.classList.remove('border-vms-red', 'scale-110');
+        b.classList.add('border-slate-300');
+      });
+      el.classList.remove('border-slate-300');
+      el.classList.add('border-vms-red', 'scale-110');
+    }
+
+    function closeBikeDetail() {
+      document.getElementById('bikeDetailModal').classList.add('hidden');
+      activeBikeId = null;
+    }
+
+    function requestQuote() {
+      document.getElementById('quoteConfirmation').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function askBotAboutCurrentBike() {
+      const bike = vmsMotorcycles.find(b => b.id === activeBikeId);
+      closeBikeDetail();
+      toggleChatDrawer(true);
+      if (bike) {
+        sendQuickChat(`Donne-moi plus d'infos sur la ${bike.name} (${bike.priceFormatted})`);
+      }
+    }
+
+    // Showrooms Filtering
+    function filterShowrooms(city) {
+      document.querySelectorAll('.sr-city-btn').forEach(btn => {
+        if (btn.textContent.includes(city) || (city === 'All' && btn.textContent.includes('Toutes'))) {
+          btn.className = 'sr-city-btn px-3 py-1.5 rounded-full text-xs font-bold bg-vms-red text-white whitespace-nowrap';
+        } else {
+          btn.className = 'sr-city-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 whitespace-nowrap';
+        }
+      });
+      renderShowrooms(city);
+    }
+
+    function renderShowrooms(city) {
+      const container = document.getElementById('showroomsList');
+      const filtered = city === 'All' ? showroomsData : showroomsData.filter(s => s.city === city);
+
+      container.innerHTML = filtered.map(sr => `
+        <div class="p-3.5 rounded-2xl bg-white card-surface border border-slate-100 shadow-xs space-y-2">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-rose-50 text-vms-red text-[10px] font-bold">${sr.city}</span>
+              <h3 class="font-display font-bold text-xs text-slate-900 dark-text mt-1">${sr.name}</h3>
+            </div>
+            <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700">
+              <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 flex items-center gap-1.5">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+            <span>${sr.address}</span>
+          </p>
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div class="flex gap-1 flex-wrap">
+              ${sr.services.map(s => `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-semibold">${s}</span>`).join('')}
+            </div>
+            <span class="text-[11px] font-bold text-slate-800 dark-text">${sr.phone}</span>
+          </div>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // Installment Simulator
+    function populateSimulatorSelect() {
+      const select = document.getElementById('simModelSelect');
+      select.innerHTML = vmsMotorcycles.map(b => `<option value="${b.price}">${b.name} — ${b.priceFormatted}</option>`).join('');
+    }
+
+    function updateSimulator() {
+      const price = parseInt(document.getElementById('simModelSelect').value, 10);
+      const months = parseInt(document.getElementById('simMonths').value, 10);
+      const downPayment = Math.round(price * 0.4);
+      const monthly = Math.round((price - downPayment) / months);
+
+      document.getElementById('simDownPayment').textContent = downPayment.toLocaleString('fr-FR') + ' DA';
+      document.getElementById('simMonthlyResult').textContent = monthly.toLocaleString('fr-FR') + ' DA / mois';
+    }
+
+    // ==================== FLOATING AI CHATBOT LOGIC ====================
+    function toggleChatDrawer(open) {
+      const drawer = document.getElementById('chatDrawer');
+      if (open) {
+        drawer.classList.remove('hidden');
+        lucide.createIcons();
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    function sendQuickChat(text) {
+      appendMessage('user', text);
+      generateBotResponse(text);
+    }
+
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      appendMessage('user', text);
+      generateBotResponse(text);
+    }
+
+    function appendMessage(sender, htmlText) {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+
+      if (sender === 'user') {
+        div.className = 'flex justify-end';
+        div.innerHTML = `
+          <div class="max-w-[80%] p-3 rounded-2xl rounded-tr-none bg-vms-red text-white text-xs shadow-xs leading-relaxed">
+            ${htmlText}
+          </div>
+        `;
+      } else {
+        div.className = 'flex items-start gap-2 max-w-[88%]';
+        div.innerHTML = `
+          <div class="w-8 h-5 rounded-full bg-white border border-vms-red flex items-center justify-center shrink-0 mt-1 px-0.5 shadow-2xs">
+            <span class="font-display font-black italic text-[8px] text-vms-red tracking-tighter">VMS</span>
+          </div>
+          <div class="p-3 rounded-2xl rounded-tl-none bg-white border border-slate-200 text-xs text-slate-700 shadow-xs leading-relaxed">
+            ${htmlText}
+          </div>
+        `;
+      }
+
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function generateBotResponse(query) {
+      const q = query.toLowerCase();
+      let reply = '';
+
+      if (q.includes('driver')) {
+        reply = `La <strong>VMS Driver 150</strong> est affichée à <strong>320 000 DA TTC</strong> (carte jaune incluse). Elle dispose d'un moteur 150cc 4T, frein à disque avant et garantie 12 mois. Souhaitez-vous simuler un paiement par facilité ?`;
+      } else if (q.includes('cuxi') || q.includes('scooter') || q.includes('ville')) {
+        reply = `Pour la ville, je recommande le <strong>VMS Cuxi 125 (265 000 DA)</strong> pour son agilité ou le <strong>VMS Driver 150 (320 000 DA)</strong> pour plus de puissance en duo !`;
+      } else if (q.includes('béjaïa') || q.includes('bejaia') || q.includes('alger') || q.includes('showroom')) {
+        reply = `Notre usine principale est située à <strong>Toudja / El Kseur (Béjaïa)</strong>, avec des showrooms officiels à Béjaïa Centre, Alger (Chéraga), Oran et Sétif. Consultez l'onglet <em>Showrooms</em> pour les adresses exactes.`;
+      } else if (q.includes('facilité') || q.includes('crédit') || q.includes('paiement')) {
+        reply = `VMS Moto propose des <strong>facilités de paiement jusqu'à 18 mois</strong> avec un apport initial de 40% (dossier : pièce d'identité, fiche de paie et chèque). Testez notre simulateur dans l'onglet <em>Favoris & Crédit</em> !`;
+      } else if (q.includes('250') || q.includes('supermoto') || q.includes('ghibli')) {
+        reply = `Nos modèles haute performance incluent le <strong>VMS Ghibli 150 GT (355 000 DA)</strong> et la <strong>VMS 250 Supermoto (485 000 DA)</strong> à refroidissement liquide.`;
+      } else {
+        reply = `Merci pour votre message à <strong>IA VMS</strong> ! Toutes nos motos sont livrées avec garantie 12 mois et disponibilité immédiate des pièces de rechange en Algérie. Consultez les fiches techniques complètes dans l'onglet <em>Motos VMS</em>.`;
+      }
+
+      setTimeout(() => {
+        appendMessage('bot', reply);
+      }, 380);
+    }
+
+    // Optional Studio Light/Dark Preview Toggle for Figma Designers + Three.js Scene Sync
+    function toggleThemeMode() {
+      isDarkMode = !isDarkMode;
+      const phone = document.getElementById('phoneFrame');
+      const header = document.getElementById('appHeader');
+      const status = document.getElementById('statusBar');
+      const bottomNav = document.getElementById('bottomNav');
+      const label = document.getElementById('themeLabel');
+
+      if (isDarkMode) {
+        phone.classList.replace('bg-[#F8FAFC]', 'bg-[#0F1117]');
+        header.classList.replace('bg-white/95', 'bg-[#161922]/95');
+        header.classList.replace('border-slate-100', 'border-white/10');
+        status.classList.replace('bg-white/95', 'bg-[#161922]/95');
+        status.classList.replace('text-slate-900', 'text-white');
+        bottomNav.classList.replace('bg-white/95', 'bg-[#161922]/95');
+        bottomNav.classList.replace('border-slate-100', 'border-white/10');
+        document.querySelectorAll('.dark-text').forEach(el => el.classList.add('text-white'));
+        document.querySelectorAll('.card-surface').forEach(el => {
+          el.classList.replace('bg-white', 'bg-[#181C26]');
+          el.classList.replace('border-slate-100', 'border-white/10');
+        });
+        label.textContent = 'Mode Sombre';
+      } else {
+        phone.classList.replace('bg-[#0F1117]', 'bg-[#F8FAFC]');
+        header.classList.replace('bg-[#161922]/95', 'bg-white/95');
+        header.classList.replace('border-white/10', 'border-slate-100');
+        status.classList.replace('bg-[#161922]/95', 'bg-white/95');
+        status.classList.replace('text-white', 'text-slate-900');
+        bottomNav.classList.replace('bg-[#161922]/95', 'bg-white/95');
+        bottomNav.classList.replace('border-white/10', 'border-slate-100');
+        document.querySelectorAll('.dark-text').forEach(el => el.classList.remove('text-white'));
+        document.querySelectorAll('.card-surface').forEach(el => {
+          el.classList.replace('bg-[#181C26]', 'bg-white');
+          el.classList.replace('border-white/10', 'border-slate-100');
+        });
+        label.textContent = 'Mode Clair';
+      }
+      updateThreeTheme(isDarkMode);
+    }
+
+    // ==================== DYNAMIC THREE.JS 3D MOTORSPORT BACKGROUND ====================
+    let threeActive = true;
+    let studioScene, studioCamera, studioRenderer, terrainMesh, embersPoints, speedRingsGroup;
+    let heroRenderer, heroScene, heroCamera, heroRing;
+    let mouseX = 0, mouseY = 0;
+
+    function initThreeBackground() {
+      if (typeof THREE === 'undefined') return;
+
+      // 1. Fullscreen Studio 3D Stage Behind Mobile Frame
+      const canvas = document.getElementById('threeBgCanvas');
+      studioScene = new THREE.Scene();
+      studioScene.fog = new THREE.FogExp2(0x080a0f, 0.032);
+
+      studioCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      studioCamera.position.set(0, 4.2, 14);
+      studioCamera.lookAt(0, 0, -10);
+
+      studioRenderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+      studioRenderer.setSize(window.innerWidth, window.innerHeight);
+      studioRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Wireframe Motorsport Terrain Grid (VMS Red #E30613)
+      const planeGeo = new THREE.PlaneGeometry(70, 70, 36, 36);
+      planeGeo.rotateX(-Math.PI / 2);
+      const planeMat = new THREE.MeshBasicMaterial({
+        color: 0xE30613,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.24
+      });
+      terrainMesh = new THREE.Mesh(planeGeo, planeMat);
+      terrainMesh.position.y = -3.5;
+      studioScene.add(terrainMesh);
+
+      // Glowing Motorsport Tachometer / Speed Rings
+      speedRingsGroup = new THREE.Group();
+      const ringGeo1 = new THREE.TorusGeometry(6.8, 0.035, 16, 100);
+      const ringMat1 = new THREE.MeshBasicMaterial({ color: 0xE30613, transparent: true, opacity: 0.45 });
+      const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+
+      const ringGeo2 = new THREE.TorusGeometry(8.5, 0.02, 16, 100);
+      const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x94A3B8, transparent: true, opacity: 0.2 });
+      const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+
+      speedRingsGroup.add(ring1, ring2);
+      speedRingsGroup.position.set(0, 1.2, -6);
+      studioScene.add(speedRingsGroup);
+
+      // Floating Crimson & Silver Embers Particles
+      const particleCount = 180;
+      const posArray = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 38;
+        posArray[i + 1] = (Math.random() - 0.2) * 18;
+        posArray[i + 2] = (Math.random() - 0.5) * 35;
+      }
+      const particlesGeo = new THREE.BufferGeometry();
+      particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      const particlesMat = new THREE.PointsMaterial({
+        size: 0.14,
+        color: 0xFF2A3C,
+        transparent: true,
+        opacity: 0.75
+      });
+      embersPoints = new THREE.Points(particlesGeo, particlesMat);
+      studioScene.add(embersPoints);
+
+      // 2. Subtle Ambient 3D Wireframe Inside App Hero Banner
+      const heroCanvas = document.getElementById('heroThreeCanvas');
+      if (heroCanvas) {
+        heroScene = new THREE.Scene();
+        heroCamera = new THREE.PerspectiveCamera(50, heroCanvas.clientWidth / (heroCanvas.clientHeight || 180), 0.1, 100);
+        heroCamera.position.z = 5;
+        heroRenderer = new THREE.WebGLRenderer({ canvas: heroCanvas, alpha: true, antialias: true });
+        heroRenderer.setSize(heroCanvas.clientWidth || 360, heroCanvas.clientHeight || 180);
+
+        const hGeo = new THREE.IcosahedronGeometry(2.1, 1);
+        const hMat = new THREE.MeshBasicMaterial({ color: 0xE30613, wireframe: true, transparent: true, opacity: 0.35 });
+        heroRing = new THREE.Mesh(hGeo, hMat);
+        heroRing.position.set(1.4, -0.2, 0);
+        heroScene.add(heroRing);
+      }
+
+      // Mouse Movement Parallax Listener
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // Responsive Resize Handler
+      window.addEventListener('resize', () => {
+        if (!studioRenderer || !studioCamera) return;
+        studioCamera.aspect = window.innerWidth / window.innerHeight;
+        studioCamera.updateProjectionMatrix();
+        studioRenderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      animateThree();
+    }
+
+    function animateThree() {
+      requestAnimationFrame(animateThree);
+      if (!threeActive || !studioRenderer) return;
+
+      const time = performance.now() * 0.0012;
+
+      // Animate scrolling motorsport grid waves
+      const pos = terrainMesh.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const z = pos.getZ(i);
+        const wave = Math.sin(x * 0.25 + time) * 0.45 + Math.cos(z * 0.25 + time * 1.4) * 0.45;
+        pos.setY(i, wave);
+      }
+      pos.needsUpdate = true;
+
+      // Rotate speed rings & respond smoothly to mouse
+      speedRingsGroup.rotation.z = time * 0.25;
+      speedRingsGroup.rotation.x = Math.sin(time * 0.5) * 0.15 + mouseY * 0.2;
+      speedRingsGroup.rotation.y = mouseX * 0.3;
+
+      embersPoints.rotation.y = time * 0.08 + mouseX * 0.15;
+      embersPoints.position.y = Math.sin(time * 0.7) * 0.3;
+
+      studioCamera.position.x += (mouseX * 1.8 - studioCamera.position.x) * 0.04;
+      studioCamera.position.y += (4.2 - mouseY * 0.9 - studioCamera.position.y) * 0.04;
+      studioCamera.lookAt(0, 0, -8);
+
+      studioRenderer.render(studioScene, studioCamera);
+
+      // Animate Hero Ambient Wireframe
+      if (heroRenderer && heroRing) {
+        heroRing.rotation.x += 0.006;
+        heroRing.rotation.y += 0.009;
+        heroRenderer.render(heroScene, heroCamera);
+      }
+    }
+
+    function toggleThreeAnimation() {
+      threeActive = !threeActive;
+      const btn = document.getElementById('threeToggleBtn');
+      const label = document.getElementById('threeLabel');
+      const canvas = document.getElementById('threeBgCanvas');
+      if (threeActive) {
+        label.textContent = '3D Actif';
+        canvas.style.opacity = '1';
+        btn.classList.add('bg-vms-red/20', 'text-rose-300');
+      } else {
+        label.textContent = '3D Pause';
+        canvas.style.opacity = '0.25';
+        btn.classList.remove('bg-vms-red/20', 'text-rose-300');
+      }
+    }
+
+    function updateThreeTheme(darkApp) {
+      if (!studioScene || !terrainMesh) return;
+      if (darkApp) {
+        studioScene.fog.color.setHex(0x050609);
+        terrainMesh.material.opacity = 0.34;
+      } else {
+        studioScene.fog.color.setHex(0x0A0D14);
+        terrainMesh.material.opacity = 0.24;
+      }
+    }
+
+    window.addEventListener('load', initThreeBackground);
+  </script>
+</body>
+</html>

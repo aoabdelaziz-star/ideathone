@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VMS Industrie — Spare-parts Intelligence</title>
+<style>
+  :root{
+    --bg:#f4f4f6; --card:#ffffff; --sidebar:#141518; --sidebar-2:#1f2126;
+    --text:#141518; --muted:#63666e; --line:#e3e5e8; --line-2:#cbd0d6;
+    --primary:#e31b23; --primary-soft:#fde8e9; --accent:#b91c1c;
+    --ok:#16a34a; --ok-soft:#eafbf1; --warn:#d97706; --warn-soft:#fff6e6;
+    --danger:#dc2626; --danger-soft:#fef0f0; --purple:#7c3aed; --purple-soft:#f4efff;
+    --radius:14px; --shadow:0 1px 2px rgba(20,21,24,.04),0 8px 24px rgba(20,21,24,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); font-size:14px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  .app{display:flex;min-height:100vh}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:252px;flex:0 0 252px;background:var(--sidebar);color:#cbd5e1;
+    display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:22px 20px 18px}
+  .brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#0891b2);display:grid;place-items:center;color:#fff;font-weight:800}
+  .brand-name{font-size:16px;font-weight:700;color:#fff;letter-spacing:.2px}
+  .brand-sub{font-size:10.5px;color:#7c8ba6;text-transform:uppercase;letter-spacing:1.2px}
+  .nav-label{padding:14px 22px 6px;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#5b6b86}
+  .nav{padding:0 10px;display:flex;flex-direction:column;gap:3px}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:9px;
+    background:transparent;border:0;color:#b7c3d8;text-align:left;width:100%;transition:.15s;
+  }
+  .nav-item:hover{background:var(--sidebar-2);color:#fff}
+  .nav-item.active{background:linear-gradient(90deg,rgba(227,27,35,.32),rgba(227,27,35,.08));color:#fff;box-shadow:inset 2px 0 0 #ff4d54}
+  .nav-item svg{width:18px;height:18px;flex:0 0 18px;opacity:.9}
+  .nav-item .step{margin-left:auto;font-size:10px;font-weight:700;color:#7f8fab;background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+  .nav-item.active .step{color:#fecaca;background:rgba(227,27,35,.24)}
+  .side-foot{margin-top:auto;padding:14px 18px 20px;border-top:1px solid rgba(255,255,255,.07)}
+  .side-foot .tiny{font-size:10.5px;color:#6d7d98;line-height:1.6}
+  .jit-pill{display:flex;align-items:center;gap:7px;font-size:11px;color:#94a3b8;margin-bottom:10px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#64748b;display:inline-block}
+  .dot.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+  .dot.warn{background:#f59e0b}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{
+    height:64px;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;padding:0 28px;
+    position:sticky;top:0;z-index:20;
+  }
+  .crumb{font-size:12px;color:var(--muted)}
+  .crumb b{color:var(--text);font-weight:600}
+  .topbar .spacer{flex:1}
+  .search{display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid transparent;border-radius:9px;padding:8px 11px;color:var(--muted);width:210px}
+  .search input{border:0;background:transparent;outline:0;width:100%;font-size:12.5px}
+  .icon-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px;display:grid;place-items:center;color:var(--muted)}
+  .icon-btn:hover{background:#f8fafc;color:var(--text)}
+  .avatar{width:34px;height:34px;border-radius:50%;background:#0f172a;color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+  .content{padding:26px 28px 40px;max-width:1320px;width:100%;margin:0 auto;flex:1}
+
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+  .page-head h1{margin:0;font-size:22px;letter-spacing:-.4px}
+  .page-head p{margin:5px 0 0;color:var(--muted);font-size:13px;max-width:640px}
+  .eyebrow{font-size:10.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--accent);font-weight:700;margin-bottom:5px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .card-h h3{margin:0;font-size:14px;font-weight:650}
+  .card-h .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .card-b{padding:18px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .g-2-1{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+  .g-1-2{grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)}
+  @media(max-width:1050px){.g4{grid-template-columns:repeat(2,1fr)}.g-2-1,.g-1-2,.g3{grid-template-columns:1fr}}
+  @media(max-width:720px){.g2,.g4{grid-template-columns:1fr}.sidebar{display:none}.content{padding:18px}.topbar{padding:0 16px}}
+
+  .btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap}
+  .btn:hover{background:#f8fafc;border-color:var(--line-2)}
+  .btn svg{width:14px;height:14px}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.primary:hover{background:#c8161d}
+  .btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn.ok:hover{background:#15803d}
+  .btn.danger{color:var(--danger);border-color:#fecaca;background:#fff}
+  .btn.danger:hover{background:var(--danger-soft)}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+  .btn.ghost:hover{background:#f1f5f9;color:var(--text)}
+  .btn.sm{padding:6px 10px;font-size:11.5px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.3px}
+  .b-crit{background:var(--danger-soft);color:var(--danger)}
+  .b-high{background:var(--warn-soft);color:var(--warn)}
+  .b-med{background:var(--primary-soft);color:var(--primary)}
+  .b-low{background:#f1f5f9;color:var(--muted)}
+  .b-ok{background:var(--ok-soft);color:var(--ok)}
+  .b-purple{background:var(--purple-soft);color:var(--purple)}
+  .b-gray{background:#f1f5f9;color:#64748b}
+
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  select,input[type=text],input[type=number],textarea{
+    border:1px solid var(--line-2);background:#fff;border-radius:9px;padding:9px 11px;outline:0;font-size:13px;width:100%
+  }
+  select:focus,input:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  textarea{resize:vertical;min-height:88px}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:11.5px;color:var(--muted)}
+  .chip b{color:var(--text)}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line);background:#fafbfc}
+  td{padding:11px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  tbody tr{transition:.12s}
+  tbody tr:hover{background:#fafcff}
+  tr.flash{animation:flash 1.8s ease}
+  @keyframes flash{0%,60%{background:#fff7d6}100%{background:transparent}}
+  .num{font-variant-numeric:tabular-nums;text-align:right}
+  .strong{font-weight:650}
+  .muted{color:var(--muted)}
+  .tiny{font-size:11px}
+
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 18px}
+  .tab{border:0;background:transparent;padding:13px 14px;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--primary);border-color:var(--primary)}
+  .tab .cnt{font-size:10px;background:#f1f5f9;padding:1px 6px;border-radius:10px;margin-left:5px}
+  .tab.active .cnt{background:var(--primary-soft);color:var(--primary)}
+
+  .stat{padding:16px 18px}
+  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:650}
+  .stat .v{font-size:26px;font-weight:750;letter-spacing:-.8px;margin-top:6px}
+  .stat .d{font-size:11.5px;margin-top:4px;color:var(--muted)}
+  .pos{color:var(--ok)!important}.neg{color:var(--danger)!important}
+
+  .range-wrap{padding:6px 2px}
+  .range-track{height:12px;border-radius:20px;background:linear-gradient(90deg,#fee2e2,#fecaca,#fca5a5);position:relative;margin:26px 8px 30px}
+  .range-base{position:absolute;top:-8px;width:3px;height:28px;background:var(--primary);border-radius:2px}
+  .range-cap{position:absolute;top:-5px;width:2px;height:22px;background:#64748b}
+  .range-lbl{position:absolute;top:-30px;transform:translateX(-50%);font-size:10.5px;color:var(--muted);white-space:nowrap}
+  .range-lbl.b{color:var(--primary);font-weight:700}
+  .slider{width:100%;accent-color:var(--primary);cursor:pointer}
+
+  .driver{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+  .driver:last-child{border-bottom:0}
+  .driver .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);flex:0 0 30px}
+  .driver .ic.up{background:var(--ok-soft);color:var(--ok)}
+  .driver .ic.down{background:var(--danger-soft);color:var(--danger)}
+  .driver .txt{flex:1;font-size:12.5px}
+  .driver .txt small{display:block;color:var(--muted);font-size:11px}
+
+  .alert-row{cursor:pointer}
+  .alert-row td:first-child{border-left:3px solid transparent}
+  .alert-row.critical td:first-child{border-left-color:var(--danger)}
+  .alert-row.high td:first-child{border-left-color:var(--warn)}
+  .alert-row.medium td:first-child{border-left-color:var(--primary)}
+  .alert-row.low td:first-child{border-left-color:var(--line-2)}
+
+  .sat-card{text-align:center;padding:18px 12px}
+  .sat-ring{position:relative;width:92px;height:92px;margin:0 auto 10px}
+  .sat-ring svg{transform:rotate(-90deg)}
+  .sat-val{position:absolute;inset:0;display:grid;place-items:center;font-size:20px;font-weight:750}
+  .sat-lbl{font-size:12px;font-weight:650}
+  .spark{width:100%;height:34px;display:block;margin-top:8px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  .nextbar{
+    margin-top:22px;padding:14px 18px;border:1px dashed var(--line-2);border-radius:12px;
+    display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.6)
+  }
+  .nextbar .lbl{font-size:11.5px;color:var(--muted)}
+  .nextbar .lbl b{color:var(--text)}
+
+  .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+  .modal-mask.open{display:flex}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.25);overflow:hidden}
+  .modal-h{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .modal-h h3{margin:0;font-size:16px}
+  .modal-b{padding:20px;display:flex;flex-direction:column;gap:14px}
+  .modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;background:#fafbfc}
+
+  .toast-wrap{position:fixed;right:22px;bottom:22px;z-index:80;display:flex;flex-direction:column;gap:10px}
+  .toast{background:#0f172a;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:12.5px;display:flex;align-items:center;gap:9px;animation:slide .25s ease}
+  .toast .tk{width:20px;height:20px;border-radius:50%;background:#22c55e;display:grid;place-items:center;font-size:12px}
+  @keyframes slide{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+
+  .screen{display:none}.screen.active{display:block}
+  .health{display:flex;align-items:center;gap:8px;font-size:12px}
+  .health .bar{width:54px;height:5px;border-radius:8px;background:#e2e8f0;overflow:hidden}
+  .health .bar i{display:block;height:100%;border-radius:8px}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:12.5px}
+  .divider{height:1px;background:var(--line);margin:16px 0}
+  .note{background:#f8fafc;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:11px 13px;font-size:12px;color:#475569}
+  /* ---------- Motion layer: transitions.dev / ObsidianUI / Aceternity / Bencho / BoardUI ---------- */
+  :root{--ease:cubic-bezier(.22,1,.36,1)}
+  @keyframes vtOut{to{opacity:0;transform:translateY(-8px) scale(.99);filter:blur(4px)}}
+  @keyframes vtIn{from{opacity:0;transform:translateY(14px) scale(.99);filter:blur(5px)}}
+  ::view-transition-old(root){animation:.24s ease both vtOut}
+  ::view-transition-new(root){animation:.42s var(--ease) both vtIn}
+  @keyframes revealUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .reveal{animation:revealUp .55s var(--ease) backwards}
+  .reveal.flash{animation:revealUp .55s var(--ease) backwards,flash 1.8s ease}
+  @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes maskIn{from{opacity:0}to{opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+  @keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(34,197,94,.35)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  @keyframes sheen{from{transform:translateX(-120%)}to{transform:translateX(220%)}}
+  .modal-mask.open{animation:maskIn .22s ease both}
+  .modal-mask.open .modal{animation:modalIn .34s var(--ease) both}
+  .shake{animation:shake .42s ease!important}
+  .icon-btn.spinning svg{animation:spin .7s var(--ease)}
+  .bars svg rect{transform-box:fill-box;transform-origin:bottom;animation:barGrow .65s var(--ease) backwards}
+  .dot.on{animation:pulseRing 2.4s infinite}
+
+  /* Aceternity-style tilt + spotlight */
+  .tilt{position:relative;transform-style:preserve-3d;transition:transform .3s var(--ease),box-shadow .3s var(--ease);will-change:transform}
+  .tilt:hover{box-shadow:0 18px 40px rgba(15,23,42,.10)}
+  .spot{overflow:hidden}
+  .spot::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;
+    background:radial-gradient(300px circle at var(--mx,50%) var(--my,50%),rgba(227,27,35,.11),transparent 62%)}
+  .spot:hover::after{opacity:1}
+  .sheen{position:relative;overflow:hidden}
+  .sheen::before{content:"";position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-120%);pointer-events:none}
+  .sheen:hover::before{animation:sheen .85s var(--ease)}
+  .magnetic{transition:transform .28s var(--ease),background .15s,border-color .15s!important}
+  .lift{transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+  .lift:hover{transform:translateY(-3px)}
+
+  /* Bencho-style slide to confirm */
+  .slide{position:relative;width:150px;height:38px;user-select:none;touch-action:none}
+  .slide-track{position:absolute;inset:0;border-radius:10px;background:#f1f5f9;border:1px solid var(--line-2);overflow:hidden}
+  .slide-fill{position:absolute;left:0;top:0;height:100%;width:38px;background:linear-gradient(90deg,#dcfce7,#bbf7d0);transition:width .3s var(--ease)}
+  .slide-thumb{position:absolute;left:3px;top:3px;width:30px;height:30px;border-radius:8px;background:var(--ok);color:#fff;display:grid;place-items:center;
+    font-size:14px;font-weight:800;cursor:grab;box-shadow:0 2px 6px rgba(22,163,74,.35);z-index:2;touch-action:none}
+  .slide-thumb:active{cursor:grabbing}
+  .slide-label{position:absolute;inset:0;display:grid;place-items:center;font-size:10.5px;font-weight:700;color:#15803d;letter-spacing:.1px;pointer-events:none;z-index:1}
+  .decide{display:flex;align-items:center;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+
+  /* BoardUI-style decision board */
+  .view-toggle{display:flex;background:#f1f5f9;border-radius:9px;padding:3px;gap:2px}
+  .view-toggle button{border:0;background:transparent;padding:6px 11px;border-radius:7px;font-size:11.5px;font-weight:650;color:var(--muted)}
+  .view-toggle button.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.09)}
+  .board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px;background:#f8fafc}
+  @media(max-width:900px){.board{grid-template-columns:1fr}}
+  .board-col{background:#f1f5f9;border:1px solid var(--line);border-radius:12px;padding:11px;min-height:190px}
+  .board-col h4{margin:2px 4px 11px;font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);display:flex;justify-content:space-between}
+  .board-card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+  .board-card:hover{border-color:#fecaca}
+
+  /* three.js hosts */
+  .three-host{position:relative;min-height:210px;flex:0 0 300px;width:300px;border-radius:12px;overflow:hidden;
+    background:radial-gradient(circle at 50% 50%,#fef2f2 0%,#fff8f8 55%,transparent 75%)}
+  .three-host.small{flex:none;width:100%;min-height:190px}
+  .three-host canvas{position:relative;z-index:1;display:block;width:100%!important;height:100%!important}
+  .orb-fallback{position:absolute;left:50%;top:50%;width:150px;height:150px;transform:translate(-50%,-50%);border-radius:50%;
+    border:1px dashed #fca5a5;box-shadow:inset 0 0 40px rgba(227,27,35,.10),0 0 30px rgba(227,27,35,.08)}
+  .hero-title{font-size:29px;line-height:1.14;letter-spacing:-1px;font-weight:760;margin:8px 0 8px}
+  @media(max-width:1050px){.three-host{flex-basis:240px;width:240px}}
+  .arrow-link svg{transition:transform .25s var(--ease)}
+  .arrow-link:hover svg{transform:translateX(4px)}
+  td svg,.alert-row svg,.board-card svg{width:14px;height:14px}
+  .slide-label svg{width:12px;height:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="VMS Industrie" style="height:34px;width:auto;background:#fff;padding:3px 7px;border-radius:7px;object-fit:contain" />
+      <div><div class="brand-name">VMS Industrie</div><div class="brand-sub">Spare-parts intelligence</div></div>
+    </div>
+    <div class="nav-label">Workspace</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="jit-pill"><span class="dot" id="jitDot"></span><span id="jitText">JIT admin: off</span></div>
+      <div class="tiny">Zero-trust workspace · All actions are logged to the audit trail.<br/>Prototype build · v4.2.1</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb" id="crumb">Overview</div>
+      <div class="spacer"></div>
+      <div class="search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input placeholder="Search parts, alerts, agencies…" /></div>
+      <button class="icon-btn" title="Refresh data" id="refreshBtn"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+      <div class="avatar" title="Amel Bensalem — VMS Operations Manager (Toudja / Béjaïa)">AB</div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <div class="modal-h"><h3 id="modalTitle">Title</h3><button class="icon-btn" id="modalX">✕</button></div>
+    <div class="modal-b" id="modalBody"></div>
+    <div class="modal-f"><button class="btn" id="modalCancel">Cancel</button><button class="btn primary" id="modalSubmit">Submit</button></div>
+  </div>
+</div>
+<div class="toast-wrap" id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script>
+/* ============================ Icons ============================ */
+const ICONS = {
+  overview:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  forecast:'<path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/>',
+  alerts:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  recs:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  insights:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  admin:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+  next:'<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  arrow:'<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+  trend:'<path d="M3 17l6-6 4 4 8-8"/>'
+};
+function svg(name,cls){return `<svg class="${cls||''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]||''}</svg>`}
+
+/* ============================ Data ============================ */
+const SCREENS = [
+  {id:'overview', name:'Overview', icon:'overview', title:'Operations overview', sub:'A single view of forecast health, open risks and the next decision waiting on you.'},
+  {id:'forecast', name:'Forecast', icon:'forecast', title:'Demand forecast', sub:'Narrow to one agency and one model, then stress-test the number with a scenario.'},
+  {id:'alerts', name:'Alerts', icon:'alerts', title:'Alerts', sub:'Every alert carries a severity, a status and a direct path to its recommended fix.'},
+  {id:'recommendations', name:'Recommendations', icon:'recs', title:'Recommendations', sub:'Stock transfers and the 6-month import plan — with benefit, cost and a decision.'},
+  {id:'insights', name:'Customer insights', icon:'insights', title:'Customer insights', sub:'Satisfaction, failures by bike age and unmet app requests feed the spare-parts forecast.'},
+  {id:'admin', name:'Admin & audit', icon:'admin', title:'Admin & audit', sub:'Temporary access, approval history, model versions and data-source health.'}
+];
+const AGENCIES = ['Toudja Central (Béjaïa)','Algiers (El Harrach)','Oran Agency','Constantine Agency','Bouira Plant'];
+const MODELS = ['VMS Driver 125','VMS XDV 300','VMS Vmax 200','VMS Joci 125','VMS12 Commercial'];
+
+const ALERTS = [
+  {id:'AL-201',sev:'Critical',status:'Open',title:'Front brake pads (DRIV032) stockout risk',meta:'Oran Agency · VMS Driver 125 (380,000 DA)',time:'12 min ago',rec:'REC-104',tab:'transfers'},
+  {id:'AL-202',sev:'Critical',status:'In progress',title:'ECU board (XDV3/153) & Commodo spike',meta:'Algiers · VMS XDV 300 (894,000 DA)',time:'48 min ago',rec:'IMP-301',tab:'imports'},
+  {id:'AL-203',sev:'High',status:'Open',title:'Fork oil seals (DRIV042) wear above plan',meta:'All agencies · 1–3 yr Driver 125 fleet',time:'2 h ago',rec:'IMP-303',tab:'imports'},
+  {id:'AL-204',sev:'High',status:'Open',title:'Fuel pump (DRIV066) transfer backlog',meta:'Toudja Central → Constantine Agency',time:'3 h ago',rec:'REC-107',tab:'transfers'},
+  {id:'AL-205',sev:'Medium',status:'Open',title:'LED speedometer (DRIV034/A) MotoBladi requests',meta:'Algiers & Oran · VMS Driver 125',time:'5 h ago',rec:'REC-109',tab:'transfers'},
+  {id:'AL-206',sev:'Low',status:'Resolved',title:'Fuel filter (DRIV067) safety stock restocked',meta:'Toudja Central (Béjaïa)',time:'Yesterday',rec:'REC-101',tab:'transfers'}
+];
+
+const TRANSFERS = [
+  {id:'REC-104',from:'Toudja Central (Béjaïa)',to:'Oran Agency',part:'Front Brake Pads (DRIV032)',qty:180,benefit:540000,cost:45000,status:'Pending'},
+  {id:'REC-107',from:'Toudja Central (Béjaïa)',to:'Constantine Agency',part:'Fuel Pump Assy (DRIV066)',qty:65,benefit:487500,cost:38000,status:'Pending'},
+  {id:'REC-109',from:'Bouira Plant',to:'Algiers (El Harrach)',part:'LED Speedometer (DRIV034/A)',qty:90,benefit:612000,cost:32000,status:'Pending'},
+  {id:'REC-101',from:'Oran Agency',to:'Toudja Central (Béjaïa)',part:'Fuel Filter (DRIV067)',qty:250,benefit:175000,cost:22000,status:'Approved'}
+];
+const IMPORTS = [
+  {id:'IMP-301',month:'Month 1 · Dec',part:'ECU Card (XDV3/153) & Commodo (XDV3/001)',qty:240,benefit:2640000,cost:1290000,status:'Pending'},
+  {id:'IMP-302',month:'Month 2 · Jan',part:'Front Brake Disc (DRIV020) & Pads (DRIV032)',qty:600,benefit:1920000,cost:840000,status:'Pending'},
+  {id:'IMP-303',month:'Month 3 · Feb',part:'Fork Oil Seals G/D (DRIV042)',qty:950,benefit:1330000,cost:510000,status:'Pending'},
+  {id:'IMP-304',month:'Months 4–6 · Mar–May',part:'Rear Shock Absorber (DRIV059)',qty:400,benefit:2160000,cost:1080000,status:'Pending'}
+];
+
+const SAT = [
+  {label:'7 days',value:92,delta:'+2 pts',dir:'pos',series:[86,88,87,90,89,92]},
+  {label:'3 months',value:88,delta:'+1 pt',dir:'pos',series:[82,84,83,86,87,88]},
+  {label:'7 months',value:76,delta:'−3 pts',dir:'neg',series:[81,80,79,78,77,76]},
+  {label:'1 year',value:68,delta:'−1 pt',dir:'neg',series:[74,73,71,70,69,68]}
+];
+const AGES = ['< 1 yr','1–2 yr','2–4 yr','4+ yr'];
+const PARTS = [
+  {name:'Brake Pads (DRIV032)',color:'#e31b23',data:[14,42,58,74]},
+  {name:'Fork Seals (DRIV042)',color:'#0891b2',data:[6,24,41,56]},
+  {name:'Fuel Pump (DRIV066)',color:'#f59e0b',data:[5,19,36,52]},
+  {name:'Transmission / Belt',color:'#7c3aed',data:[11,29,39,48]},
+  {name:'ECU / Display',color:'#64748b',data:[15,21,18,14]}
+];
+const UNMET = [
+  {req:'Front brake pads (DRIV032) — Driver 125',count:438,trend:'+22%',part:'Brakes · 2,400 DA'},
+  {req:'Fork oil seals G/D (DRIV042) — Driver 125',count:364,trend:'+15%',part:'Suspension · 1,800 DA'},
+  {req:'Commodo G/D (XDV3/001) — XDV 300',count:279,trend:'+27%',part:'Electrical · 6,500 DA'},
+  {req:'Fuel filter (DRIV067) — Joci / Driver',count:215,trend:'+9%',part:'Fuel System · 950 DA'}
+];
+const JIT = [
+  {role:'Temporary Admin',user:'A. Bensalem',scope:'Forecast approvals',start:'Today 08:14',expiry:'Today 18:00',status:'Active'},
+  {role:'Data Steward',user:'K. Meziane',scope:'Import plan edits',start:'Today 09:02',expiry:'Today 13:00',status:'Active'},
+  {role:'Auditor (read-only)',user:'S. Khelifi',scope:'Admin & audit',start:'Yesterday 16:40',expiry:'Today 16:40',status:'Active'}
+];
+const VERSIONS = [
+  {v:'v4.2.1',date:'2026-11-18',acc:'91.4%',status:'Production',note:'Added price-elasticity term'},
+  {v:'v4.2.0',date:'2026-11-04',acc:'90.1%',status:'Shadow',note:'Customer-insight features'},
+  {v:'v4.1.3',date:'2026-10-21',acc:'88.7%',status:'Archived',note:'Baseline seasonal model'}
+];
+const SOURCES = [
+  {name:'MotoBladi.dz Orders & Portal',status:'Healthy',sync:'2 min ago',records:'184K',latency:'115 ms'},
+  {name:'MS Parts Catalog (msparts.vms.dz)',status:'Healthy',sync:'5 min ago',records:'92K',latency:'180 ms'},
+  {name:'MotoBladi Unmet Part Requests',status:'Degraded',sync:'38 min ago',records:'41K',latency:'1.3 s'},
+  {name:'Toudja & Bouira ERP Stock',status:'Healthy',sync:'1 min ago',records:'620K',latency:'95 ms'}
+];
+const AUDIT_SEED = [
+  {ts:'2026-11-21 09:42',user:'A. Bensalem',action:'Approved',target:'REC-098',detail:'Stock transfer · Central → Coastal'},
+  {ts:'2026-11-21 09:18',user:'K. Meziane',action:'Edited',target:'IMP-299',detail:'Reason: "Adjusted lead time for port strike"'},
+  {ts:'2026-11-21 08:55',user:'A. Bensalem',action:'Granted JIT',target:'K. Meziane',detail:'Data Steward · 4 hours'},
+  {ts:'2026-11-20 17:30',user:'System',action:'Deployed',target:'v4.2.1',detail:'Model version promoted to Production'}
+];
+
+/* ============================ State ============================ */
+const store = (key,fallback)=>{try{const v=localStorage.getItem('vms_3d_'+key);return v?JSON.parse(v):fallback}catch(e){return fallback}};
+const save = (key,val)=>{try{localStorage.setItem('vms_3d_'+key,JSON.stringify(val))}catch(e){}};
+const state = {
+  screen:'overview',
+  agency:store('agency',AGENCIES[0]),
+  model:store('model',MODELS[0]),
+  price:0,
+  tab:store('tab','transfers'),
+  view:store('view','table'),
+  recStatus:store('recStatus',{}),
+  audit:store('audit',AUDIT_SEED),
+  jit:store('jit',JIT),
+  versions:store('versions',VERSIONS),
+  focusRec:null
+};
+function persist(){save('agency',state.agency);save('model',state.model);save('tab',state.tab);save('view',state.view);save('recStatus',state.recStatus);save('audit',state.audit);save('jit',state.jit);save('versions',state.versions)}
+
+/* ============================ Utils ============================ */
+const money = n => n.toLocaleString('en-US') + ' DA';
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function statusOf(rec){return state.recStatus[rec.id]||rec.status}
+function addAudit(action,target,detail){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const ts=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  state.audit.unshift({ts,user:'A. Bensalem',action,target,detail}); persist();
+}
+function toast(msg){
+  const el=document.createElement('div');el.className='toast';
+  el.innerHTML=`<span class="tk">✓</span><span>${esc(msg)}</span>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+function sparkline(series,color){
+  const w=120,h=34,min=Math.min(...series)-2,max=Math.max(...series)+2;
+  const pts=series.map((v,i)=>`${(i/(series.length-1))*w},${h-((v-min)/(max-min))*h}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function groupedBars(){
+  const W=620,H=250,pl=42,pb=34,pt=14;
+  const cw=(W-pl-10)/AGES.length, groupW=cw*0.68, barW=groupW/PARTS.length;
+  let out=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  [0,25,50,75,100].forEach(t=>{
+    const y=pt+(H-pt-pb)*(1-t/100);
+    out+=`<line x1="${pl}" y1="${y}" x2="${W-8}" y2="${y}" stroke="#eef2f7"/><text x="${pl-8}" y="${y+3}" text-anchor="end" font-size="9" fill="#94a3b8">${t}%</text>`;
+  });
+  AGES.forEach((age,ai)=>{
+    const x0=pl+ai*cw+(cw-groupW)/2;
+    PARTS.forEach((p,pi)=>{
+      const v=p.data[ai], bh=(H-pt-pb)*(v/100), x=x0+pi*barW, y=H-pb-bh;
+      out+=`<rect x="${x}" y="${y}" width="${barW-2}" height="${bh}" rx="2" fill="${p.color}" opacity=".9" style="animation-delay:${(ai*4+pi)*35}ms"><title>${esc(p.name)} · ${esc(age)}: ${v}%</title></rect>`;
+    });
+    out+=`<text x="${pl+ai*cw+cw/2}" y="${H-12}" text-anchor="middle" font-size="10" fill="#64748b">${esc(age)}</text>`;
+  });
+  out+='</svg>';
+  return out;
+}
+
+/* ============================ Motion + three.js layer ============================ */
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function cnt(v,opt){
+  opt=opt||{};
+  const dec=opt.dec||0, p=opt.p||'', s=opt.s||'';
+  const fmt=x=>p+x.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec})+s;
+  return `<span class="count" data-v="${v}" data-d="${dec}" data-p="${p}" data-s="${s}">${fmt(v)}</span>`;
+}
+function animateCount(el){
+  if(el.dataset.done) return; el.dataset.done='1';
+  const to=parseFloat(el.dataset.v), dec=+(el.dataset.d||0), p=el.dataset.p||'', s=el.dataset.s||'';
+  const fmt=x=>p+x.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec})+s;
+  const st=performance.now(), dur=760;
+  (function step(t){
+    const k=Math.min(1,(t-st)/dur), e=1-Math.pow(1-k,3);
+    el.textContent=fmt(to*e);
+    if(k<1) requestAnimationFrame(step);
+  })(performance.now());
+}
+function setupSlide(el){
+  const track=el.querySelector('.slide-track'), thumb=el.querySelector('.slide-thumb'),
+        fill=el.querySelector('.slide-fill'), label=el.querySelector('.slide-label'), id=el.dataset.id;
+  let dragging=false, startX=0, cur=0, max=1;
+  const paint=x=>{
+    cur=x; thumb.style.transform=`translateX(${x}px)`;
+    fill.style.width=(x+38)+'px';
+    label.style.opacity=String(Math.max(0,1-x/max*1.5));
+  };
+  thumb.addEventListener('pointerdown',e=>{
+    dragging=true; startX=e.clientX-cur; max=Math.max(1,track.clientWidth-thumb.offsetWidth-6);
+    thumb.setPointerCapture(e.pointerId); thumb.style.transition='none'; fill.style.transition='none';
+  });
+  thumb.addEventListener('pointermove',e=>{
+    if(!dragging) return;
+    const x=Math.max(0,Math.min(max,e.clientX-startX));
+    paint(x); thumb.dataset.ready=(x/max>.9)?'1':'';
+  });
+  const end=()=>{
+    if(!dragging) return; dragging=false;
+    thumb.style.transition='transform .32s var(--ease)'; fill.style.transition='width .32s var(--ease)';
+    if(thumb.dataset.ready==='1'){
+      label.textContent='Approved ✓'; label.style.opacity='1';
+      setTimeout(()=>approve(id),190);
+    }else{ paint(0); label.style.opacity='1'; }
+  };
+  thumb.addEventListener('pointerup',end);
+  thumb.addEventListener('pointercancel',end);
+}
+function enhance(){
+  document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.animationDelay=(i*42)+'ms'});
+  if(reduceMotion()) return;
+  document.querySelectorAll('.count').forEach(animateCount);
+  document.querySelectorAll('.tilt').forEach(el=>{
+    el.addEventListener('mousemove',e=>{
+      const r=el.getBoundingClientRect(), x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+      el.style.transform=`perspective(1000px) rotateX(${-y*4.5}deg) rotateY(${x*4.5}deg) translateY(-2px)`;
+    });
+    el.addEventListener('mouseleave',()=>{el.style.transform=''});
+  });
+  document.querySelectorAll('.spot').forEach(el=>{
+    el.addEventListener('mousemove',e=>{
+      const r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',(e.clientX-r.left)+'px');
+      el.style.setProperty('--my',(e.clientY-r.top)+'px');
+    });
+  });
+  document.querySelectorAll('.magnetic').forEach(el=>{
+    el.addEventListener('mousemove',e=>{
+      const r=el.getBoundingClientRect();
+      el.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.16}px,${(e.clientY-r.top-r.height/2)*.16}px)`;
+    });
+    el.addEventListener('mouseleave',()=>{el.style.transform=''});
+  });
+  document.querySelectorAll('.slide').forEach(setupSlide);
+}
+
+let rig=null;
+const pointer={x:0,y:0};
+window.addEventListener('mousemove',e=>{
+  pointer.x=(e.clientX/window.innerWidth-.5)*2;
+  pointer.y=(e.clientY/window.innerHeight-.5)*2;
+});
+function disposeRig(){
+  if(!rig) return;
+  cancelAnimationFrame(rig.raf); rig.ro.disconnect();
+  if(rig.renderer){rig.renderer.dispose(); rig.renderer.domElement.remove()}
+  rig=null;
+}
+function randDir(){
+  const u=Math.random()*2-1, a=Math.random()*Math.PI*2, s=Math.sqrt(1-u*u);
+  return new THREE.Vector3(Math.cos(a)*s,u,Math.sin(a)*s);
+}
+function makeRig(host,kind){
+  if(!window.THREE||!host) return null;
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(45,(host.clientWidth/host.clientHeight)||1,.1,100);
+  cam.position.z=kind==='globe'?3.35:3.0;
+  const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setSize(host.clientWidth||300,host.clientHeight||210,false);
+  renderer.domElement.style.cssText='width:100%;height:100%;display:block';
+  host.appendChild(renderer.domElement);
+  const group=new THREE.Group(); scene.add(group);
+  let intensity=1;
+
+  if(kind==='globe'){
+    const pos=[], N=760;
+    for(let i=0;i<N;i++){
+      const y=1-(i/(N-1))*2, r=Math.sqrt(1-y*y), th=Math.PI*(3-Math.sqrt(5))*i;
+      pos.push(Math.cos(th)*r*1.02,y*1.02,Math.sin(th)*r*1.02);
+    }
+    const pg=new THREE.BufferGeometry();
+    pg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    group.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0xe31b23,size:.022,transparent:true,opacity:.8})));
+    const seg=[];
+    for(let i=0;i<105;i++){
+      const a=randDir().multiplyScalar(1.02), b=randDir().multiplyScalar(1.02);
+      const q=new THREE.Quaternion().setFromUnitVectors(a.clone().normalize(),b.clone().normalize());
+      let prev=a;
+      for(let s=1;s<=7;s++){
+        const rq=new THREE.Quaternion().slerp(q,s/7), p=a.clone().applyQuaternion(rq);
+        seg.push(prev.x,prev.y,prev.z,p.x,p.y,p.z); prev=p;
+      }
+    }
+    const lg=new THREE.BufferGeometry();
+    lg.setAttribute('position',new THREE.Float32BufferAttribute(seg,3));
+    group.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0xf87171,transparent:true,opacity:.15})));
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.22,1.235,72),new THREE.MeshBasicMaterial({color:0xfca5a5,transparent:true,opacity:.4,side:THREE.DoubleSide}));
+    ring.rotation.x=Math.PI/2.5; group.add(ring);
+  }else{
+    const knot=new THREE.Mesh(
+      new THREE.TorusKnotGeometry(.68,.18,140,14,2,3),
+      new THREE.MeshBasicMaterial({color:0xe31b23,wireframe:true,transparent:true,opacity:.3})
+    );
+    group.add(knot);
+    const pos=[];
+    for(let i=0;i<280;i++){const d=randDir().multiplyScalar(1.1);pos.push(d.x,d.y,d.z)}
+    const pg=new THREE.BufferGeometry();
+    pg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    group.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x1f2126,size:.019,transparent:true,opacity:.55})));
+  }
+
+  const ro=new ResizeObserver(()=>{
+    const w=host.clientWidth,h=host.clientHeight;
+    if(!w||!h) return;
+    cam.aspect=w/h; cam.updateProjectionMatrix(); renderer.setSize(w,h,false);
+  });
+  ro.observe(host);
+  let raf;
+  function loop(){
+    raf=requestAnimationFrame(loop);
+    group.rotation.y+=(kind==='globe'?.0015:.004*intensity);
+    group.rotation.x+=(pointer.y*.12-group.rotation.x)*.035;
+    group.rotation.z+=(pointer.x*.05-group.rotation.z)*.025;
+    const target=kind==='globe'?1:(.82+intensity*.2);
+    group.scale.lerp(new THREE.Vector3(target,target,target),.06);
+    renderer.render(scene,cam);
+  }
+  loop();
+  return {raf,ro,renderer,setIntensity:v=>{intensity=v}};
+}
+function mountThree(){
+  disposeRig();
+  if(!window.THREE||reduceMotion()) return;
+  const host = state.screen==='overview' ? document.getElementById('hero3d')
+             : state.screen==='forecast' ? document.getElementById('forecast3d') : null;
+  if(host){ try{ rig=makeRig(host,state.screen==='overview'?'globe':'knot'); }
+    catch(err){ host.innerHTML='<div class="orb-fallback"></div>'; } }
+}
+function paint(after){
+  const update=()=>{render();enhance();mountThree();if(after)after()};
+  if(document.startViewTransition && !reduceMotion()) document.startViewTransition(update);
+  else update();
+}
+function setView(v){state.view=v;persist();paint()}
+
+/* ============================ Navigation ============================ */
+function idx(id){return SCREENS.findIndex(s=>s.id===id)}
+function renderNav(){
+  document.getElementById('nav').innerHTML=SCREENS.map((s,i)=>
+    `<button class="nav-item ${state.screen===s.id?'active':''}" onclick="go('${s.id}')">${svg(s.icon)}<span>${s.name}</span><span class="step">${i+1}/6</span></button>`
+  ).join('');
+}
+function go(id,opts){
+  opts=opts||{};
+  state.screen=id; state.focusRec=opts.focus||null;
+  if(opts.tab) state.tab=opts.tab;
+  persist();
+  paint(()=>{
+    if(opts.focus){
+      const row=document.getElementById('row-'+opts.focus);
+      if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+    }else window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+function nextBtn(){
+  const i=idx(state.screen);
+  if(i===SCREENS.length-1) return `<div class="nextbar"><div class="lbl">End of the workflow — <b>all six screens complete</b>.</div><button class="btn" onclick="go('overview')">Back to overview</button></div>`;
+  const n=SCREENS[i+1];
+  return `<div class="nextbar"><div class="lbl">Next step · <b>${n.name}</b> — ${esc(n.sub)}</div><button class="btn primary" onclick="go('${n.id}')">${n.name} ${svg('next')}</button></div>`;
+}
+function head(){
+  const s=SCREENS[idx(state.screen)];
+  return `<div class="page-head"><div><div class="eyebrow">Step ${idx(state.screen)+1} of 6</div><h1>${s.title}</h1><p>${s.sub}</p></div></div>`;
+}
+function render(){
+  renderNav();
+  const s=SCREENS[idx(state.screen)];
+  document.getElementById('crumb').innerHTML=`Workspace / <b>${s.name}</b>`;
+  const jitActive=state.jit.some(j=>j.status==='Active');
+  document.getElementById('jitDot').className='dot'+(jitActive?' on':'');
+  document.getElementById('jitText').textContent=`JIT admin: ${jitActive?'on':'off'}`;
+  document.getElementById('content').innerHTML=SCREENS.map(x=>`<section class="screen ${x.id===state.screen?'active':''}" id="screen-${x.id}">${SCREENS[idx(x.id)].render()}</section>`).join('');
+}
+
+/* ============================ Forecast math ============================ */
+const MODEL_META = {
+  'VMS Driver 125': {motoPrice: 380000, avgPartPrice: 3400, baseUnits: 14200, keyPart: 'Front Brake Pads (DRIV032)'},
+  'VMS XDV 300':    {motoPrice: 894000, avgPartPrice: 8900, baseUnits: 6800,  keyPart: 'Commodo G/D (XDV3/001)'},
+  'VMS Vmax 200':   {motoPrice: 517000, avgPartPrice: 5200, baseUnits: 9400,  keyPart: 'Drive Belt & Roller Kit'},
+  'VMS Joci 125':   {motoPrice: 255000, avgPartPrice: 2600, baseUnits: 16500, keyPart: 'Fuel Filter (DRIV067)'},
+  'VMS12 Commercial':{motoPrice: 365000, avgPartPrice: 4800, baseUnits: 5100, keyPart: 'Rear Axle & Brake Shoe'}
+};
+const AGENCY_FACTOR = {
+  'Toudja Central (Béjaïa)': 1.25,
+  'Algiers (El Harrach)': 1.35,
+  'Oran Agency': 1.15,
+  'Constantine Agency': 0.95,
+  'Bouira Plant': 0.85
+};
+function baseDemand(){
+  const m = MODEL_META[state.model] || MODEL_META['VMS Driver 125'];
+  const f = AGENCY_FACTOR[state.agency] || 1.0;
+  return Math.round(m.baseUnits * f);
+}
+function forecast(){
+  const m = MODEL_META[state.model] || MODEL_META['VMS Driver 125'];
+  const base=baseDemand(), p=state.price;
+  const demand=Math.round(base*(1-0.012*p));
+  const price=Math.round(m.avgPartPrice*(1+p/100));
+  const revenue=Math.round(demand*price);
+  return {base,demand,price,motoPrice:m.motoPrice,keyPart:m.keyPart,revenue,low:Math.round(demand*0.88),high:Math.round(demand*1.11),delta:Math.round((demand/base-1)*100)};
+}
+
+/* ============================ Screens ============================ */
+SCREENS[0].render=function(){
+  const f=forecast(), open=ALERTS.filter(a=>a.status!=='Resolved').length, pending=[...TRANSFERS,...IMPORTS].filter(r=>statusOf(r)==='Pending').length;
+  return head()+`
+  <div class="card tilt spot reveal sheen" style="display:flex;align-items:center;gap:20px;padding:22px 24px;margin-bottom:16px;background:linear-gradient(110deg,#ffffff 0%,#fff9f9 62%,#fde8e9 100%)">
+    <div style="flex:1;min-width:0">
+      <div class="eyebrow">Live intelligence · three.js</div>
+      <div class="hero-title">Your spare-parts decisions,<br/>in one connected flow.</div>
+      <p class="muted" style="margin:0 0 14px;max-width:520px">Forecast, risk, action and evidence — linked end to end. Move your cursor to explore the demand network.</p>
+      <div class="chip-row" style="margin-bottom:16px">
+        <span class="chip"><b>${esc(state.agency)}</b> / ${esc(state.model)}</span>
+        <span class="chip">Model <b>v4.2.1</b></span>
+        <span class="chip">Confidence <b>91.4%</b></span>
+      </div>
+      <button class="btn primary magnetic arrow-link" onclick="go('forecast')">Explore the forecast ${svg('arrow')}</button>
+    </div>
+    <div id="hero3d" class="three-host"><div class="orb-fallback"></div></div>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card stat tilt spot reveal"><div class="k">Forecast · base case</div><div class="v">${cnt(f.base)}</div><div class="d">units next quarter · ${esc(state.model)}</div></div>
+    <div class="card stat tilt spot reveal"><div class="k">Open alerts</div><div class="v">${cnt(open)}</div><div class="d"><span class="neg">2 critical</span> need a decision</div></div>
+    <div class="card stat tilt spot reveal"><div class="k">Pending decisions</div><div class="v">${cnt(pending)}</div><div class="d">transfers + import lines</div></div>
+    <div class="card stat tilt spot reveal"><div class="k">Model accuracy</div><div class="v">${cnt(91.4,{dec:1,s:'%'})}</div><div class="d pos">+1.3 pts vs v4.1.3</div></div>
+  </div>
+  <div class="grid g-2-1">
+    <div class="card tilt spot reveal">
+      <div class="card-h"><div><h3>Demand trend & forecast band</h3><div class="sub">Trailing 6 periods + projected range</div></div><button class="btn sm arrow-link lift" onclick="go('forecast')">Open forecast ${svg('arrow')}</button></div>
+      <div class="card-b">${trendChart(f)}</div>
+    </div>
+    <div class="card reveal">
+      <div class="card-h"><h3>Needs your attention</h3><span class="badge b-crit">${open} open</span></div>
+      <div class="card-b" style="padding:6px 0">${ALERTS.filter(a=>a.status!=='Resolved').slice(0,4).map(a=>alertMini(a)).join('')}</div>
+    </div>
+  </div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card card-b tilt spot reveal arrow-link lift" style="cursor:pointer" onclick="go('insights')"><div class="k tiny muted" style="text-transform:uppercase;letter-spacing:.6px">Customer pulse</div><div style="font-size:22px;font-weight:750;margin-top:5px">${cnt(76,{s:'%'})} <span class="tiny muted" style="font-weight:400">satisfaction at 7 months</span></div><button class="btn sm" style="margin-top:10px">View insights ${svg('arrow')}</button></div>
+    <div class="card card-b tilt spot reveal arrow-link lift" style="cursor:pointer" onclick="go('admin')"><div class="k tiny muted" style="text-transform:uppercase;letter-spacing:.6px">Audit trail</div><div style="font-size:22px;font-weight:750;margin-top:5px">${cnt(state.audit.length)} <span class="tiny muted" style="font-weight:400">recorded events</span></div><button class="btn sm" style="margin-top:10px">Open audit ${svg('arrow')}</button></div>
+    <div class="card card-b tilt spot reveal arrow-link lift" style="cursor:pointer" onclick="go('admin')"><div class="k tiny muted" style="text-transform:uppercase;letter-spacing:.6px">JIT access</div><div style="font-size:22px;font-weight:750;margin-top:5px">${cnt(state.jit.filter(j=>j.status==='Active').length)} <span class="tiny muted" style="font-weight:400">active grants</span></div><button class="btn sm" style="margin-top:10px">Manage roles ${svg('arrow')}</button></div>
+  </div>
+  ${nextBtn()}`;
+};
+function trendChart(f){
+  const W=640,H=220,pl=40,pb=26,pt=12;
+  const hist=[6200,7100,6900,7800,8200,f.base], max=Math.max(f.high,...hist)*1.05;
+  const x=i=>pl+i*((W-pl-12)/(hist.length-1+1.5)), y=v=>pt+(H-pt-pb)*(1-v/max);
+  let out=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">`;
+  [0,.25,.5,.75,1].forEach(t=>{const yy=pt+(H-pt-pb)*(1-t);out+=`<line x1="${pl}" y1="${yy}" x2="${W-8}" y2="${yy}" stroke="#eef2f7"/><text x="${pl-7}" y="${yy+3}" text-anchor="end" font-size="9" fill="#94a3b8">${Math.round(max*t/1000)}k</text>`});
+  const pts=hist.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+  const bx=x(hist.length-1), fx=x(hist.length), ly=y(f.low), hy=y(f.high);
+  out+=`<rect x="${bx}" y="${hy}" width="${fx-bx}" height="${ly-hy}" rx="4" fill="#fee2e2"/>`;
+  out+=`<line x1="${bx}" y1="${y(f.base)}" x2="${fx}" y2="${y(f.base)}" stroke="#e31b23" stroke-width="2" stroke-dasharray="4 3"/>`;
+  out+=`<polyline points="${pts}" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  hist.forEach((v,i)=>{out+=`<circle cx="${x(i)}" cy="${y(v)}" r="3" fill="#fff" stroke="#0f172a" stroke-width="2"/>`});
+  out+=`<text x="${bx}" y="${H-8}" text-anchor="middle" font-size="9" fill="#64748b">Now</text><text x="${fx}" y="${H-8}" text-anchor="middle" font-size="9" fill="#e31b23">Forecast</text>`;
+  out+='</svg>';
+  return out;
+}
+function alertMini(a){
+  const b=a.sev==='Critical'?'b-crit':a.sev==='High'?'b-high':a.sev==='Medium'?'b-med':'b-low';
+  return `<div class="alert-row reveal lift arrow-link" style="padding:11px 16px;border-bottom:1px solid #f1f5f9" onclick="go('recommendations',{focus:'${a.rec}',tab:'${a.tab}'})">
+    <div style="display:flex;justify-content:space-between;gap:8px"><span class="strong tiny">${esc(a.title)}</span><span class="badge ${b}">${a.sev}</span></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:3px"><span class="muted tiny">${esc(a.meta)} · ${a.time}</span><span class="tiny" style="color:var(--primary)">${svg('arrow')}</span></div></div>`;
+}
+
+SCREENS[1].render=function(){
+  const f=forecast();
+  return head()+`
+  <div class="card reveal" style="margin-bottom:16px">
+    <div class="card-b" style="display:flex;gap:14px;align-items:end;flex-wrap:wrap">
+      <div class="field" style="min-width:220px"><label>Agency</label><select onchange="setFilter('agency',this.value)">${AGENCIES.map(a=>`<option ${state.agency===a?'selected':''}>${a}</option>`).join('')}</select></div>
+      <div class="field" style="min-width:220px"><label>Bike model</label><select onchange="setFilter('model',this.value)">${MODELS.map(m=>`<option ${state.model===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="muted tiny" style="padding-bottom:11px">View narrowed to <b>${esc(state.agency)}</b> / <b>${esc(state.model)}</b></div>
+    </div>
+  </div>
+  <div class="grid g-2-1">
+    <div class="card tilt spot reveal">
+      <div class="card-h"><div><h3>Quarter demand forecast</h3><div class="sub">Range reflects 80% confidence interval</div></div><span class="badge b-purple" id="fScenario">${state.price===0?'Base case':'Scenario active'}</span></div>
+      <div class="card-b">
+        <div class="grid g3" style="gap:10px;margin-bottom:6px">
+          <div class="stat" style="padding:10px 0"><div class="k">Low</div><div class="v" style="font-size:21px" id="fLow">${f.low.toLocaleString()}</div></div>
+          <div class="stat" style="padding:10px 0;text-align:center"><div class="k">Base / scenario</div><div class="v" style="font-size:25px;color:var(--primary)" id="fDemand">${f.demand.toLocaleString()}</div><div class="d ${f.delta<=0?'pos':'neg'}" id="fDelta">${f.delta>0?'+':''}${f.delta}% vs base</div></div>
+          <div class="stat" style="padding:10px 0;text-align:right"><div class="k">High</div><div class="v" style="font-size:21px" id="fHigh">${f.high.toLocaleString()}</div></div>
+        </div>
+        <div class="range-wrap"><div class="range-track">
+          <div class="range-lbl" style="left:0%" id="fRangeLow">${f.low.toLocaleString()}</div>
+          <div class="range-lbl b" style="left:50%" id="fRangeMid">${f.demand.toLocaleString()}</div>
+          <div class="range-lbl" style="left:100%" id="fRangeHigh">${f.high.toLocaleString()}</div>
+          <div class="range-cap" style="left:0"></div><div class="range-cap" style="left:100%"></div>
+          <div class="range-base" style="left:50%"></div>
+        </div></div>
+        <div class="divider"></div>
+        <div class="field"><label>What-if · price change <span style="color:var(--primary)" id="fPriceLabel">(${state.price>0?'+':''}${state.price}%)</span></label>
+          <input class="slider" id="priceSlider" type="range" min="-20" max="20" step="1" value="${state.price}" oninput="setPrice(this.value)" />
+          <div class="muted tiny" style="display:flex;justify-content:space-between"><span>−20% discount</span><span>0%</span><span>+20% increase</span></div>
+        </div>
+        <div class="grid g4" style="gap:10px;margin-top:16px">
+          <div class="note"><b>Bike retail price (VMS)</b><br/><span style="font-size:14px;font-weight:700" id="fMotoPrice">${money(f.motoPrice)}</span></div>
+          <div class="note"><b>Avg part unit price</b><br/><span style="font-size:14px;font-weight:700" id="fPrice">${money(f.price)}</span></div>
+          <div class="note"><b>Projected demand</b><br/><span style="font-size:14px;font-weight:700"><span id="fUnits">${f.demand.toLocaleString()}</span> units</span></div>
+          <div class="note"><b>Projected revenue</b><br/><span style="font-size:14px;font-weight:700" id="fRev">${money(f.revenue)}</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="card tilt spot reveal">
+        <div class="card-h"><div><h3>Scenario surface</h3><div class="sub">three.js reacts to your price what-if</div></div><span class="badge b-purple" id="fPulse">1.00×</span></div>
+        <div id="forecast3d" class="three-host small"><div class="orb-fallback"></div></div>
+      </div>
+      <div class="card reveal">
+        <div class="card-h"><h3>What drives this forecast</h3></div>
+        <div class="card-b">
+          <div class="driver"><div class="ic up">${svg('trend')}</div><div class="txt">Seasonal demand<b><small>+12% heading into quarter</small></b></div><span class="badge b-ok">+12%</span></div>
+          <div class="driver"><div class="ic down">${svg('forecast')}</div><div class="txt">Price elasticity<b><small>−1.2% demand per +1% price</small></b></div><span class="badge b-crit">−1.2</span></div>
+          <div class="driver"><div class="ic">${svg('insights')}</div><div class="txt">Brake pad wear (DRIV032 · 2–4 yr)<b><small>58% of workshop replacements</small></b></div><span class="badge b-med">high</span></div>
+          <div class="driver"><div class="ic up">${svg('shield')}</div><div class="txt">Model confidence<b><small>v4.2.1 · 91.4% accuracy</small></b></div><span class="badge b-ok">good</span></div>
+          <div class="divider"></div>
+          <div class="note">Drag the slider — demand, revenue and the 3D surface update together. Scenario assumptions are recorded when you act on a recommendation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  ${nextBtn()}`;
+};
+function setFilter(k,v){state[k]=v;persist();paint()}
+function updateForecast(){
+  const f=forecast(), $=id=>document.getElementById(id);
+  if(!$('fDemand')) return;
+  $('fLow').textContent=f.low.toLocaleString();
+  $('fDemand').textContent=f.demand.toLocaleString();
+  $('fHigh').textContent=f.high.toLocaleString();
+  $('fRangeLow').textContent=f.low.toLocaleString();
+  $('fRangeMid').textContent=f.demand.toLocaleString();
+  $('fRangeHigh').textContent=f.high.toLocaleString();
+  $('fUnits').textContent=f.demand.toLocaleString();
+  if($('fMotoPrice')) $('fMotoPrice').textContent=money(f.motoPrice);
+  $('fPrice').textContent=money(f.price);
+  $('fRev').textContent=money(f.revenue);
+  $('fDelta').textContent=(f.delta>0?'+':'')+f.delta+'% vs base';
+  $('fDelta').className='d '+(f.delta<=0?'pos':'neg');
+  $('fPriceLabel').textContent='('+(state.price>0?'+':'')+state.price+'%)';
+  $('fScenario').textContent=state.price===0?'Base case':'Scenario active';
+  const factor=f.demand/f.base;
+  $('fPulse').textContent=factor.toFixed(2)+'×';
+  if(rig&&rig.setIntensity) rig.setIntensity(factor);
+}
+function setPrice(v){
+  state.price=+v;
+  const slider=document.getElementById('priceSlider');
+  if(slider) slider.value=state.price;
+  updateForecast();
+}
+
+SCREENS[2].render=function(){
+  const sevCls=s=>s==='Critical'?'b-crit':s==='High'?'b-high':s==='Medium'?'b-med':'b-low';
+  const stCls=s=>s==='Open'?'b-high':s==='In progress'?'b-med':'b-ok';
+  return head()+`
+  <div class="grid g4" style="margin-bottom:16px">
+    ${['Critical','High','Medium','Low'].map(s=>{const n=ALERTS.filter(a=>a.sev===s&&a.status!=='Resolved').length;return `<div class="card stat tilt spot reveal"><div class="k">${s}</div><div class="v">${cnt(n)}</div><div class="d">open alerts</div></div>`}).join('')}
+  </div>
+  <div class="card reveal">
+    <div class="card-h"><div><h3>Alert queue</h3><div class="sub">Click any alert to jump straight to its matching recommendation</div></div><span class="badge b-gray">${ALERTS.length} total</span></div>
+    <table><thead><tr><th style="width:34%">Alert</th><th>Severity</th><th>Status</th><th>Context</th><th>Raised</th><th></th></tr></thead>
+    <tbody>${ALERTS.map(a=>`<tr class="alert-row ${a.sev.toLowerCase()} reveal" onclick="go('recommendations',{focus:'${a.rec}',tab:'${a.tab}'})">
+      <td><div class="strong">${esc(a.title)}</div><div class="muted tiny">${a.id} → ${a.rec}</div></td>
+      <td><span class="badge ${sevCls(a.sev)}">${a.sev}</span></td>
+      <td><span class="badge ${stCls(a.status)}">${a.status}</span></td>
+      <td class="muted">${esc(a.meta)}</td><td class="muted">${a.time}</td>
+      <td class="num">${svg('arrow','')}</td></tr>`).join('')}</tbody></table>
+  </div>
+  <div class="note" style="margin-top:16px">Severity sets urgency; status shows progress. The linked ID (e.g. REC-104) opens the exact fix — no searching required.</div>
+  ${nextBtn()}`;
+};
+
+SCREENS[3].render=function(){
+  const rows=state.tab==='transfers'?TRANSFERS:IMPORTS;
+  const tabBtn=(id,label,arr)=>`<button class="tab ${state.tab===id?'active':''}" onclick="setTab('${id}')">${label}<span class="cnt">${arr.filter(r=>statusOf(r)==='Pending').length}</span></button>`;
+  const groups=[
+    {label:'Awaiting decision',cls:'b-high',test:r=>statusOf(r)==='Pending'},
+    {label:'Approved',cls:'b-ok',test:r=>statusOf(r)==='Approved'},
+    {label:'Edited / rejected',cls:'b-purple',test:r=>statusOf(r)!=='Pending'&&statusOf(r)!=='Approved'}
+  ];
+  return head()+`
+  <div class="card reveal">
+    <div class="card-h" style="flex-wrap:wrap">
+      <div class="tabs" style="padding:0;border:0;flex:1">${tabBtn('transfers','Stock transfers',TRANSFERS)}${tabBtn('imports','6-month import plan',IMPORTS)}</div>
+      <div class="view-toggle" role="group" aria-label="View mode">
+        <button class="${state.view==='table'?'active':''}" onclick="setView('table')">☰ Table</button>
+        <button class="${state.view==='board'?'active':''}" onclick="setView('board')">▦ Board</button>
+      </div>
+    </div>
+    ${state.view==='table'?`
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th>${state.tab==='transfers'?'Transfer':'Window'}</th><th>Part</th><th class="num">Qty</th><th class="num">Benefit</th><th class="num">Cost</th><th class="num">Net</th><th>Status</th><th class="num" style="min-width:285px">Decision</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>{const st=statusOf(r);return `<tr id="row-${r.id}" class="reveal ${state.focusRec===r.id?'flash':''}">
+      <td><div class="strong">${state.tab==='transfers'?esc(r.from)+' → '+esc(r.to):esc(r.month)}</div><div class="muted tiny">${r.id}</div></td>
+      <td>${esc(r.part)}</td><td class="num">${r.qty}</td>
+      <td class="num pos strong">+${money(r.benefit)}</td><td class="num neg">−${money(r.cost)}</td>
+      <td class="num strong">${money(r.benefit-r.cost)}</td>
+      <td>${statusBadge(st)}</td>
+      <td class="num">${st==='Pending'?`<div class="decide">${slideApprove(r.id)}<button class="btn sm" onclick="openReason('edit','${r.id}')">Edit</button><button class="btn sm danger" onclick="openReason('reject','${r.id}')">Reject</button></div>`:'<span class="muted tiny">Final</span>'}</td>
+    </tr>`}).join('')}
+    </tbody></table></div>`:`
+    <div class="board">${groups.map(g=>{const items=rows.filter(g.test);return `<div class="board-col">
+      <h4><span>${g.label}</span><span class="badge ${g.cls}">${items.length}</span></h4>
+      ${items.length?items.map(r=>`<div class="board-card tilt spot reveal ${state.focusRec===r.id?'flash':''}" id="row-${r.id}">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span class="tiny muted">${r.id}</span>${statusBadge(statusOf(r))}</div>
+        <div class="strong" style="margin-top:7px">${esc(r.part)}</div>
+        <div class="muted tiny">${state.tab==='transfers'?esc(r.from)+' → '+esc(r.to):esc(r.month)}</div>
+        <div class="chip-row" style="margin-top:9px"><span class="chip">Qty <b>${r.qty}</b></span><span class="chip">Net <b class="pos">${money(r.benefit-r.cost)}</b></span></div>
+        ${statusOf(r)==='Pending'?`<div class="decide" style="margin-top:11px">${slideApprove(r.id)}<button class="btn sm" onclick="openReason('edit','${r.id}')">Edit</button><button class="btn sm danger" onclick="openReason('reject','${r.id}')">Reject</button></div>`:''}
+      </div>`).join(''):'<div class="empty">Nothing here yet</div>'}
+    </div>`}).join('')}</div>`}
+    <div class="card-h" style="border-bottom:0;border-top:1px solid var(--line)">
+      <div class="muted tiny">Drag <b>Slide to approve</b>, or use Edit / Reject. Every decision is written to the audit log with its reason.</div>
+      <button class="btn sm arrow-link lift" onclick="go('admin')">View audit log ${svg('arrow')}</button>
+    </div>
+  </div>
+  ${nextBtn()}`;
+};
+function statusBadge(st){return st==='Approved'?'<span class="badge b-ok">Approved</span>':st==='Rejected'?'<span class="badge b-crit">Rejected</span>':st.startsWith('Edited')?'<span class="badge b-purple">Edited · pending</span>':'<span class="badge b-high">Pending</span>'}
+function slideApprove(id){return `<div class="slide" data-id="${id}" title="Drag to approve"><div class="slide-track"><div class="slide-fill"></div><span class="slide-label">Slide to approve</span><div class="slide-thumb">›</div></div></div>`}
+function decisionBtns(r){return `<div class="decide">${slideApprove(r.id)}<button class="btn sm" onclick="openReason('edit','${r.id}')">Edit</button><button class="btn sm danger" onclick="openReason('reject','${r.id}')">Reject</button></div>`}
+function setTab(t){state.tab=t;persist();paint()}
+function findRec(id){return [...TRANSFERS,...IMPORTS].find(r=>r.id===id)}
+function approve(id){
+  const r=findRec(id);state.recStatus[id]='Approved';
+  addAudit('Approved',id,`${r.part} · ${money(r.benefit-r.cost)} net benefit`);
+  paint();toast(`${id} approved and logged`);
+}
+function openReason(kind,id){
+  openModal(
+    kind==='edit'?`Edit ${id}`:`Reject ${id}`,
+    `<div class="note">${kind==='edit'?'Describe the change you want to make.':'Tell us why this recommendation is not right.'} This reason is saved to the <b>audit log</b> and used to improve the model.</div>
+     <div class="field"><label>Reason (required)</label><textarea id="reasonText" placeholder="${kind==='edit'?'e.g. Reduce quantity to 80; supplier lead time changed':'e.g. Demand assumption too aggressive for this region'}"></textarea></div>`,
+    kind==='edit'?'Save edit':'Confirm rejection',
+    ()=>{
+      const box=document.getElementById('reasonText'), v=box.value.trim();
+      if(!v){
+        box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); box.focus();
+        return false;
+      }
+      state.recStatus[id]=kind==='edit'?'Edited · pending':'Rejected';
+      addAudit(kind==='edit'?'Edited':'Rejected',id,`Reason: "${v}"`);
+      paint();toast(`${id} ${kind==='edit'?'edit saved':'rejected'} — reason logged`);
+      return true;
+    }
+  );
+}
+
+SCREENS[4].render=function(){
+  return head()+`
+  <div class="card reveal" style="margin-bottom:16px"><div class="card-h"><div><h3>Satisfaction over ownership</h3><div class="sub">Response score at each milestone — trends show where experience slips</div></div><span class="badge b-gray">n = 12,408 surveys</span></div>
+    <div class="card-b"><div class="grid g4">${SAT.map(s=>satCard(s)).join('')}</div></div></div>
+  <div class="grid g-2-1">
+    <div class="card tilt spot reveal"><div class="card-h"><div><h3>Parts that fail most, by bike age</h3><div class="sub">Share of reported failures within each age band</div></div></div>
+      <div class="card-b"><div class="legend" style="margin-bottom:10px">${PARTS.map(p=>`<span><i class="sw" style="background:${p.color}"></i>${p.name}</span>`).join('')}</div><div class="bars">${groupedBars()}</div></div></div>
+    <div class="card reveal"><div class="card-h"><div><h3>Unmet MotoBladi.dz requests</h3><div class="sub">What riders asked for but could not find</div></div></div>
+      <div class="card-b" style="padding:0"><table><thead><tr><th>Request</th><th class="num">Count</th><th>Trend</th></tr></thead><tbody>${UNMET.map(u=>`<tr class="reveal">
+        <td><div class="strong tiny">${esc(u.req)}</div><div class="muted tiny">${esc(u.part)}</div></td>
+        <td class="num">${cnt(u.count)}</td><td class="pos tiny strong">${u.trend}</td></tr>`).join('')}</tbody></table>
+      <div class="card-b"><button class="btn primary magnetic arrow-link" style="width:100%" onclick="go('forecast')">Feed into spare-parts forecast ${svg('arrow')}</button></div></div></div>
+  </div>
+  ${nextBtn()}`;
+};
+function satCard(s){
+  const c=s.value>=85?'#16a34a':s.value>=75?'#f59e0b':'#dc2626', r=38, cir=2*Math.PI*r, off=cir*(1-s.value/100);
+  return `<div class="card sat-card tilt spot reveal"><div class="sat-ring"><svg width="92" height="92"><circle cx="46" cy="46" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="8"/><circle cx="46" cy="46" r="${r}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${cir}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset .9s var(--ease)"/></svg><div class="sat-val">${cnt(s.value,{s:'%'})}</div></div>
+    <div class="sat-lbl">${s.label}</div><div class="tiny ${s.dir==='pos'?'pos':'neg'}" style="font-weight:650;margin-top:2px">${s.delta} vs last period</div>${sparkline(s.series,c)}</div>`;
+}
+
+SCREENS[5].render=function(){
+  return head()+`
+  <div class="grid g2">
+    <div class="card tilt spot reveal">
+      <div class="card-h"><div><h3>Temporary admin access (JIT)</h3><div class="sub">Time-boxed roles, least privilege by default</div></div><button class="btn sm primary magnetic" onclick="openGrant()">${svg('plus')} Grant access</button></div>
+      <div class="card-b" style="padding:0"><table><thead><tr><th>Role / user</th><th>Scope</th><th>Expires</th><th></th></tr></thead><tbody>${state.jit.map((j,i)=>`<tr>
+        <td><div class="strong tiny">${esc(j.role)}</div><div class="muted tiny">${esc(j.user)} · since ${j.start}</div></td>
+        <td class="muted tiny">${esc(j.scope)}</td><td class="tiny">${esc(j.expiry)}</td>
+        <td class="num">${j.status==='Active'?`<button class="btn sm danger" onclick="revoke(${i})">Revoke</button>`:'<span class="badge b-gray">Expired</span>'}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+    <div class="card tilt spot reveal">
+      <div class="card-h"><div><h3>Data source health</h3><div class="sub">Freshness and latency of every feed</div></div><span class="badge b-ok">3 of 4 healthy</span></div>
+      <div class="card-b" style="padding:0"><table><thead><tr><th>Source</th><th>Status</th><th>Last sync</th><th class="num">Latency</th></tr></thead><tbody>${SOURCES.map(s=>`<tr>
+        <td><div class="strong tiny">${esc(s.name)}</div><div class="muted tiny">${s.records} records</div></td>
+        <td><span class="badge ${s.status==='Healthy'?'b-ok':'b-high'}">${s.status}</span></td>
+        <td class="muted tiny">${s.sync}</td><td class="num tiny">${s.latency}</td></tr>`).join('')}</tbody></table></div>
+    </div>
+  </div>
+  <div class="card reveal" style="margin-top:16px">
+    <div class="card-h"><div><h3>Audit log</h3><div class="sub">Who accessed what · what changed · zero-trust evidence</div></div><button class="btn sm magnetic" onclick="exportAudit()">Export CSV</button></div>
+    <div class="card-b" style="padding:0;max-height:290px;overflow:auto"><table><thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>${state.audit.map(a=>`<tr>
+      <td class="muted tiny">${esc(a.ts)}</td><td class="tiny strong">${esc(a.user)}</td>
+      <td><span class="badge ${a.action==='Approved'?'b-ok':a.action==='Rejected'?'b-crit':a.action==='Edited'?'b-purple':'b-med'}">${esc(a.action)}</span></td>
+      <td class="tiny">${esc(a.target)}</td><td class="muted tiny">${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div>
+  </div>
+  <div class="card reveal" style="margin-top:16px">
+    <div class="card-h"><div><h3>Model versions</h3><div class="sub">Deploy history and accuracy by release</div></div></div>
+    <div class="card-b" style="padding:0"><table><thead><tr><th>Version</th><th>Deployed</th><th>Accuracy</th><th>Note</th><th>Status</th><th></th></tr></thead><tbody>${state.versions.map((v,i)=>`<tr>
+      <td class="strong">${esc(v.v)}</td><td class="muted tiny">${v.date}</td><td class="tiny">${v.acc}</td><td class="muted tiny">${esc(v.note)}</td>
+      <td><span class="badge ${v.status==='Production'?'b-ok':v.status==='Shadow'?'b-purple':'b-gray'}">${v.status}</span></td>
+      <td class="num">${v.status==='Production'?`<button class="btn sm" onclick="rollback(${i})">Roll back</button>`:''}</td></tr>`).join('')}</tbody></table></div>
+  </div>
+  ${nextBtn()}`;
+};
+function revoke(i){
+  const j=state.jit[i];state.jit.splice(i,1);
+  addAudit('Revoked JIT',j.user,`${j.role} · ${j.scope}`);
+  paint();toast(`${j.user}'s access revoked`);
+}
+function openGrant(){
+  openModal('Grant temporary admin access',
+    `<div class="field"><label>Role</label><select id="gRole"><option>Temporary Admin</option><option>Data Steward</option><option>Auditor (read-only)</option></select></div>
+     <div class="field"><label>User</label><input id="gUser" type="text" placeholder="e.g. Y. Hamidi"/></div>
+     <div class="field"><label>Scope</label><input id="gScope" type="text" placeholder="e.g. Forecast approvals"/></div>
+     <div class="field"><label>Duration</label><select id="gDur"><option>4 hours</option><option>8 hours</option><option>24 hours</option></select></div>
+     <div class="note">Access expires automatically. The grant is recorded in the audit log.</div>`,
+    'Grant access',()=>{
+      const u=document.getElementById('gUser').value.trim(), sc=document.getElementById('gScope').value.trim();
+      if(!u||!sc){toast('Enter a user and scope');return false}
+      const role=document.getElementById('gRole').value,dur=document.getElementById('gDur').value;
+      state.jit.unshift({role,user:u,scope:sc,start:'Just now',expiry:'In '+dur,status:'Active'});
+      addAudit('Granted JIT',u,`${role} · ${dur}`);
+      paint();toast(`Temporary access granted to ${u}`);return true;
+    });
+}
+function rollback(i){
+  const v=state.versions[i];v.status='Archived';
+  state.versions.forEach(x=>{if(x.v==='v4.1.3')x.status='Production'});
+  addAudit('Rollback','v4.1.3',`Promoted after ${v.v} issue`);
+  paint();toast('Rolled back to v4.1.3');
+}
+function exportAudit(){
+  const rows=[['Timestamp','Actor','Action','Target','Detail'],...state.audit.map(a=>[a.ts,a.user,a.action,a.target,a.detail])];
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vms-industrie-audit.csv';a.click();
+  toast('Audit log exported');
+}
+
+/* ============================ Modal plumbing ============================ */
+let modalAction=null;
+function openModal(title,body,submitLabel,action){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body;
+  document.getElementById('modalSubmit').textContent=submitLabel;
+  modalAction=action;
+  document.getElementById('modalMask').classList.add('open');
+}
+function closeModal(){document.getElementById('modalMask').classList.remove('open');modalAction=null}
+document.getElementById('modalX').onclick=closeModal;
+document.getElementById('modalCancel').onclick=closeModal;
+document.getElementById('modalMask').onclick=e=>{if(e.target.id==='modalMask')closeModal()};
+document.getElementById('modalSubmit').onclick=()=>{if(modalAction&&modalAction()!==false)closeModal()};
+document.getElementById('refreshBtn').onclick=e=>{
+  const btn=e.currentTarget;
+  btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'),720);
+  toast('All data sources refreshed');
+};
+
+/* ============================ Boot ============================ */
+render(); enhance(); mountThree();
+</script>
+</body>
+</html>
