@@ -1,0 +1,526 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* --------------------------------------------------------------------------
+   Design tokens — light is the default, dark is selected before first paint.
+   All spacing follows a 4px scale; surfaces use soft shadows + glass blur.
+--------------------------------------------------------------------------- */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --background: #f4f5f8;
+  --foreground: #14161c;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-glass: rgb(255 255 255 / 82%);
+  --card: #ffffff;
+  --card-foreground: #14161c;
+  --popover: #ffffff;
+  --popover-foreground: #14161c;
+  --primary: #e31b23;
+  --primary-hover: #c8161d;
+  --primary-foreground: #ffffff;
+  --primary-soft: #fde8e9;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #63666e;
+  --accent: #fff1f2;
+  --accent-foreground: #b91c1c;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-soft: #eafbf1;
+  --warning: #d97706;
+  --warning-soft: #fff6e6;
+  --purple: #7c3aed;
+  --purple-soft: #f4efff;
+  --border: #e3e5e8;
+  --border-strong: #cbd0d6;
+  --input: #ffffff;
+  --ring: #e31b23;
+  --sidebar: #141518;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-accent: #1f2126;
+  --shadow-sm: 0 1px 2px rgb(20 21 24 / 5%);
+  --shadow-md: 0 1px 2px rgb(20 21 24 / 4%), 0 8px 24px rgb(20 21 24 / 6%);
+  --shadow-lg: 0 18px 60px rgb(15 23 42 / 14%);
+  --grid-line: #eef2f7;
+  --stripe-color: #ffffff;
+  --radius: 14px;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #0b0d12;
+  --foreground: #f1f5f9;
+  --surface: #14171e;
+  --surface-soft: #1a1e27;
+  --surface-glass: rgb(20 23 30 / 82%);
+  --card: #151922;
+  --card-foreground: #f1f5f9;
+  --popover: #1a1e27;
+  --popover-foreground: #f1f5f9;
+  --primary: #ff4d54;
+  --primary-hover: #ff6b70;
+  --primary-foreground: #180708;
+  --primary-soft: #3b1519;
+  --secondary: #232936;
+  --secondary-foreground: #e2e8f0;
+  --muted: #232936;
+  --muted-foreground: #9aa6b8;
+  --accent: #2a1519;
+  --accent-foreground: #fecaca;
+  --destructive: #f87171;
+  --destructive-foreground: #180708;
+  --success: #4ade80;
+  --success-soft: #0e2a1b;
+  --warning: #fbbf24;
+  --warning-soft: #2e2208;
+  --purple: #a78bfa;
+  --purple-soft: #221a3d;
+  --border: #29303c;
+  --border-strong: #3b4554;
+  --input: #1a1e27;
+  --ring: #ff4d54;
+  --sidebar: #090a0e;
+  --sidebar-foreground: #b8c4d8;
+  --sidebar-accent: #1a1e27;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 22%), 0 12px 30px rgb(0 0 0 / 30%);
+  --shadow-lg: 0 20px 70px rgb(0 0 0 / 48%);
+  --grid-line: #232a36;
+  --stripe-color: #0b0d12;
+  --radius: 14px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  --animate-gradient: gradient 8s linear infinite;
+  --animate-aurora-bg: aurora-bg 18s ease-in-out infinite alternate;
+  @keyframes aurora-bg {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
+  @keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+    }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+    }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+    }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+    }
+  }
+  @keyframes gradient {
+  to {
+    background-position: var(--bg-size, 300%) 0;
+    }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html[lang='zgh'] body,
+html[lang='ar'] body {
+  font-family: 'Noto Sans Tifinagh', 'Inter', system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* Logical-property helpers keep RTL layouts correct. */
+.vms-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.vms-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+}
+
+.vms-glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.vms-muted {
+  color: var(--muted-foreground);
+}
+
+.vms-label {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vms-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.vms-num {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.vms-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.vms-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.hl {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+  border-radius: 3px;
+  padding-inline: 1px;
+}
+
+/* Table surfaces */
+.vms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.vms-table th {
+  text-align: start;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  font-weight: 700;
+  padding: 10px 12px;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface-soft);
+  white-space: nowrap;
+}
+
+.vms-table td {
+  padding: 11px 12px;
+  border-block-end: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.vms-table tbody tr {
+  transition: background 140ms ease;
+}
+
+.vms-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+.vms-table tr[data-highlight='true'] {
+  animation: vms-flash 2s ease;
+}
+
+@keyframes vms-flash {
+  0%,
+  55% {
+    background: color-mix(in srgb, var(--warning) 24%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@keyframes vms-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vms-spin {
+  animation: vms-spin 720ms linear;
+}
+
+@keyframes vms-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.vms-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-soft);
+  border-radius: 8px;
+}
+
+.vms-skeleton::after {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 7%, transparent), transparent);
+  animation: vms-shimmer 1.4s infinite;
+  content: '';
+}
+
+@keyframes vms-logo-pulse {
+  0%,
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.035);
+  }
+}
+
+/* Glass logo stage that tracks the pointer. */
+.vms-logo-glass {
+  background: color-mix(in srgb, var(--surface-glass) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 10%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 12px 30px color-mix(in srgb, var(--primary) 12%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* --------------------------------------------------------------------------
+   VMS identity backdrop — charcoal depth, signature red + cyan glow,
+   technical blueprint grid and a faint wordmark. Decorative only; it sits
+   behind content (parents must create a stacking context with `isolate`).
+--------------------------------------------------------------------------- */
+.vms-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.vms-backdrop-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+  animation: vms-backdrop-drift 22s ease-in-out infinite alternate;
+}
+
+.vms-backdrop-glow-primary {
+  top: -18%;
+  left: -12%;
+  width: 46vw;
+  height: 46vw;
+  min-width: 380px;
+  min-height: 380px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 55%, transparent) 0%, transparent 70%);
+}
+
+.vms-backdrop-glow-cyan {
+  right: -10%;
+  bottom: -20%;
+  width: 40vw;
+  height: 40vw;
+  min-width: 320px;
+  min-height: 320px;
+  background: radial-gradient(circle, #0891b266 0%, transparent 70%);
+  animation-delay: -11s;
+  animation-duration: 27s;
+}
+
+.vms-backdrop-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--foreground) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 7%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 50% 40%, black 10%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, black 10%, transparent 80%);
+}
+
+.vms-backdrop-lines {
+  position: absolute;
+  inset: -20%;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 118px,
+    color-mix(in srgb, var(--primary) 9%, transparent) 118px 119px,
+    transparent 119px 240px
+  );
+  mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 0%, transparent 70%);
+  opacity: 0.6;
+  animation: vms-backdrop-lines 40s linear infinite;
+}
+
+.vms-backdrop-wordmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: transparent;
+  font-size: clamp(9rem, 26vw, 26rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  opacity: 0.4;
+  user-select: none;
+  white-space: nowrap;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--primary) 18%, var(--foreground) 8%);
+}
+
+.vms-backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 25%, color-mix(in srgb, var(--background) 88%, transparent) 100%);
+}
+
+@keyframes vms-backdrop-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(5%, 4%, 0) scale(1.12);
+  }
+}
+
+@keyframes vms-backdrop-lines {
+  to {
+    transform: translate3d(-4%, 3%, 0);
+  }
+}
+
+/* Price-impact visual — technical grid + slow VMS-red light sweep. */
+.price-impact-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to top, black, transparent 85%);
+  -webkit-mask-image: linear-gradient(to top, black, transparent 85%);
+}
+
+.price-impact::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 40%,
+    color-mix(in srgb, var(--primary) 8%, transparent) 50%,
+    transparent 60%
+  );
+  animation: price-impact-sweep 6s ease-in-out infinite;
+  content: '';
+  pointer-events: none;
+}
+
+@keyframes price-impact-sweep {
+  0%,
+  30% {
+    transform: translateX(-100%);
+  }
+  70%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
